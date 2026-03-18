@@ -79,9 +79,9 @@ export default function AdminPage() {
       {/* Quick Links */}
       <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
         <Link href="/admin/users">
-          <Card className="hover:border-blue-300 transition-colors cursor-pointer">
+          <Card className="hover:border-gray-300 transition-colors cursor-pointer">
             <CardContent className="flex items-center gap-3 p-4">
-              <Users className="h-8 w-8 text-blue-600" />
+              <Users className="h-8 w-8 text-[#1a1a1a]" />
               <div>
                 <p className="font-semibold">User Management</p>
                 <p className="text-sm text-gray-500">{stats?.totalUsers || 0} users ({stats?.activeUsers || 0} active)</p>
@@ -90,7 +90,7 @@ export default function AdminPage() {
           </Card>
         </Link>
         <Link href="/admin/audit-log">
-          <Card className="hover:border-blue-300 transition-colors cursor-pointer">
+          <Card className="hover:border-gray-300 transition-colors cursor-pointer">
             <CardContent className="flex items-center gap-3 p-4">
               <ClipboardList className="h-8 w-8 text-purple-600" />
               <div>

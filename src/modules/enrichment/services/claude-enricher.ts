@@ -42,10 +42,25 @@ export interface EnrichmentBrief {
   summary: string;
   role_context: string;
   portfolio_overview: string;
+  company_intel: {
+    estimated_size: string;
+    service_area: string;
+    specialization: string;
+    decision_structure: string;
+  };
+  property_risk_assessment: {
+    property_name: string;
+    risk_level: "HIGH" | "MEDIUM" | "LOW";
+    primary_risks: string[];
+    estimated_annual_exposure: string;
+  }[];
   pain_triggers: string[];
   personalization_hooks: string[];
   recommended_approach: string[];
   risk_factors: string[];
+  competitive_landscape: string;
+  best_time_to_call: string;
+  warm_lead_score: number;
   warm_lead_score_rationale: string;
 }
 
@@ -98,9 +113,9 @@ function buildPrompt(contact: ContactForEnrichment): string {
     })
     .join("\n");
 
-  return `You are a sales intelligence researcher for Paul Davis Restoration, a disaster restoration company (water, fire, mold, storm damage) serving Palm Beach County through the Treasure Coast in South Florida.
+  return `You are an elite sales intelligence analyst for Paul Davis Restoration, a disaster restoration company (water, fire, mold, storm, biohazard) serving Palm Beach County through the Treasure Coast in South Florida.
 
-Research and create a warm lead brief for the following contact. Your goal is to give a sales rep everything they need to make a warm, informed first call.
+Your job: build a DEEP research brief that makes a sales rep sound like they already know this person. Use everything you know about the company, the role, the properties, and the South Florida market.
 
 ## Contact Information
 - **Name:** ${contact.fullName}
@@ -115,42 +130,64 @@ Research and create a warm lead brief for the following contact. Your goal is to
 - **Name:** ${contact.organization?.name || "Unknown"}
 - **Type:** ${contact.organization?.orgType?.replace("_", " ") || "Unknown"}
 - **Website:** ${contact.organization?.website || "Not available"}
+- **Domain:** ${contact.organization?.domain || "Not available"}
 
 ## Properties Managed/Associated
 ${propList || "  No properties linked"}
 
-## Your Task
-Based on this information and your knowledge of South Florida property management, commercial real estate, HOAs/COAs, and restoration services, produce a structured brief with:
+## DEEP RESEARCH INSTRUCTIONS
+Go beyond surface-level. Use your knowledge to infer and deduce:
 
-1. **Summary** (2-3 sentences): Who this person is and why they're relevant to Paul Davis
-2. **Role Context**: What their role likely involves and their decision-making authority for restoration/maintenance services
-3. **Portfolio Overview**: Assessment of the properties they manage/own — size, type, risk profile for restoration needs
-4. **Pain Triggers** (3-5 bullet points): Specific issues this person likely faces that Paul Davis solves. Consider:
-   - South Florida hurricane season (June-November)
-   - Aging building infrastructure
-   - Water intrusion/pipe bursts in high-rises
-   - Mold risk from humidity
-   - Insurance compliance requirements
-   - Board/owner pressure for emergency preparedness
-   - HOA/COA budget cycle timing
-5. **Personalization Hooks** (2-4 bullet points): Specific things a rep could mention to show they've done their homework
-6. **Recommended Approach** (2-3 bullet points): How a rep should approach this contact — what to lead with, what angle to take
-7. **Risk Factors** (2-3 bullet points): Property-specific restoration risks (flood zone, coastal exposure, building age, etc.)
-8. **Warm Lead Score Rationale**: One paragraph explaining how warm this lead is and why
+**Company Intelligence:**
+- What kind of company is this? How big? What's their service area?
+- For property management companies: how many properties do they likely manage? What tier (luxury, mid-market, affordable)?
+- For HOA/COA boards: what's the typical board structure? Who makes vendor decisions?
+- What's their likely vendor selection process?
+- Are they the type that uses one restoration vendor or shops around?
 
-Respond in JSON format matching this exact structure:
+**Property Risk Analysis:**
+- For each property, assess REAL risks based on: ZIP code (flood zone?), year built (aging infrastructure?), building type (high-rise = pipe risk, coastal = hurricane/salt damage), unit count (scale of potential damage)
+- South Florida specific: hurricane season exposure, King Tide flooding, aging condo infrastructure (post-Surfside building safety laws), mold from humidity
+- Estimate annual restoration exposure (e.g., "A 200-unit coastal high-rise built in 1985 likely faces $50K-$200K in annual water damage claims")
+
+**Competitive Landscape:**
+- Who likely services this account now? (ServiceMaster, Belfor, ServPro, local firms)
+- What would make them switch?
+
+**Timing Intelligence:**
+- When is the best time to reach this person? (e.g., HOA board meetings are typically quarterly, budget season is Oct-Dec, hurricane prep is March-May)
+- What's happening in their world RIGHT NOW that creates urgency?
+
+Respond in this EXACT JSON format:
 {
-  "summary": "...",
-  "role_context": "...",
-  "portfolio_overview": "...",
-  "pain_triggers": ["...", "..."],
-  "personalization_hooks": ["...", "..."],
-  "recommended_approach": ["...", "..."],
-  "risk_factors": ["...", "..."],
-  "warm_lead_score_rationale": "..."
+  "summary": "2-3 sentences: who they are, why Paul Davis should call them TODAY",
+  "role_context": "Their decision-making authority, who they report to, what keeps them up at night",
+  "portfolio_overview": "Assessment of their property portfolio — types, scale, overall risk profile",
+  "company_intel": {
+    "estimated_size": "Small/Medium/Large + employee count estimate if possible",
+    "service_area": "Geographic coverage",
+    "specialization": "What types of properties they focus on",
+    "decision_structure": "Who makes vendor decisions and how (single decision-maker, committee, board vote, etc.)"
+  },
+  "property_risk_assessment": [
+    {
+      "property_name": "Name of property",
+      "risk_level": "HIGH/MEDIUM/LOW",
+      "primary_risks": ["specific risk 1", "specific risk 2"],
+      "estimated_annual_exposure": "$X-$Y estimated annual restoration spend"
+    }
+  ],
+  "pain_triggers": ["5-7 SPECIFIC issues — not generic. Reference their actual properties, location, building age, etc."],
+  "personalization_hooks": ["3-5 things a rep can say to show deep knowledge — mention property names, local events, industry trends"],
+  "recommended_approach": ["3-4 tactical steps: what to lead with, what to ask, what to offer"],
+  "risk_factors": ["3-4 property-specific restoration risks with real data points"],
+  "competitive_landscape": "Who likely has this account, what would make them switch, Paul Davis's angle",
+  "best_time_to_call": "Best day/time and why (reference their role, industry patterns, seasonal timing)",
+  "warm_lead_score": 75,
+  "warm_lead_score_rationale": "Score 0-100 with detailed reasoning"
 }
 
-Be specific to South Florida and the restoration industry. Reference actual risks, seasonal patterns, and industry dynamics. Do NOT be generic.`;
+CRITICAL: Be specific to THIS person, THESE properties, THIS part of South Florida. Generic briefs are useless. Reference actual property names, cities, building characteristics, and local market dynamics.`;
 }
 
 export async function enrichContact(contactId: string): Promise<EnrichmentBrief> {
@@ -185,8 +222,8 @@ export async function enrichContact(contactId: string): Promise<EnrichmentBrief>
   const prompt = buildPrompt(contact);
 
   const response = await getAnthropicClient().messages.create({
-    model: "claude-sonnet-4-5-20250929",
-    max_tokens: 2000,
+    model: "claude-haiku-4-5-20251001",
+    max_tokens: 8000,
     messages: [{ role: "user", content: prompt }],
   }).catch((err) => {
     throw new Error(`Claude API error: ${err instanceof Error ? err.message : String(err)}`);
@@ -197,12 +234,65 @@ export async function enrichContact(contactId: string): Promise<EnrichmentBrief>
     throw new Error("No text response from Claude");
   }
 
-  // Extract JSON from the response (handle potential markdown code blocks)
+  // Extract JSON from the response (handle markdown code blocks, truncated responses)
   let jsonStr = textBlock.text;
-  const jsonMatch = jsonStr.match(/```(?:json)?\s*([\s\S]*?)```/);
+  // Try code block extraction first (greedy to handle truncated closing)
+  const jsonMatch = jsonStr.match(/```(?:json)?\s*([\s\S]*?)```/)
+    || jsonStr.match(/```(?:json)?\s*([\s\S]+)/);
   if (jsonMatch) {
     jsonStr = jsonMatch[1];
   }
+  // Strip any remaining backticks or whitespace
+  jsonStr = jsonStr.replace(/^`+|`+$/g, "").trim();
+
+  // Robust JSON repair for truncated responses
+  function repairJson(str: string): string {
+    // First try parsing as-is
+    try { JSON.parse(str); return str; } catch {}
+
+    // Remove any trailing partial key-value (e.g., cut mid-string)
+    // Find the last complete value (ends with ", }, ], number, true, false, null)
+    let s = str.trim();
+
+    // If truncated mid-string, close the string
+    // Count unescaped quotes
+    let quoteCount = 0;
+    for (let i = 0; i < s.length; i++) {
+      if (s[i] === '"' && (i === 0 || s[i - 1] !== '\\')) quoteCount++;
+    }
+    if (quoteCount % 2 !== 0) {
+      // Odd quotes — truncated inside a string value
+      s += '"';
+    }
+
+    // Remove trailing comma if present
+    s = s.replace(/,\s*$/, '');
+
+    // Close unclosed brackets/braces
+    const stack: string[] = [];
+    let inString = false;
+    for (let i = 0; i < s.length; i++) {
+      const ch = s[i];
+      if (ch === '"' && (i === 0 || s[i - 1] !== '\\')) {
+        inString = !inString;
+        continue;
+      }
+      if (inString) continue;
+      if (ch === '{') stack.push('}');
+      else if (ch === '[') stack.push(']');
+      else if (ch === '}' || ch === ']') stack.pop();
+    }
+
+    // Close everything that's open
+    s += stack.reverse().join('');
+
+    // Final cleanup: trailing commas before closing brackets
+    s = s.replace(/,\s*}/g, '}').replace(/,\s*]/g, ']');
+
+    return s;
+  }
+
+  jsonStr = repairJson(jsonStr);
 
   let brief: EnrichmentBrief;
   try {
@@ -223,13 +313,15 @@ export async function enrichContact(contactId: string): Promise<EnrichmentBrief>
     },
   });
 
-  // Also enrich the organization if it has one
+  // Also enrich the organization with deeper company intel
   if (contact.organizationId) {
     await prisma.organization.update({
       where: { id: contact.organizationId },
       data: {
         enrichmentBrief: brief.portfolio_overview,
         companyIntel: {
+          ...brief.company_intel,
+          competitive_landscape: brief.competitive_landscape,
           role_context: brief.role_context,
           risk_factors: brief.risk_factors,
           enrichedAt: new Date().toISOString(),
@@ -238,13 +330,18 @@ export async function enrichContact(contactId: string): Promise<EnrichmentBrief>
     });
   }
 
-  // Enrich properties with risk factors
+  // Enrich properties with per-property risk assessments
   for (const cp of contact.properties) {
+    const propAssessment = brief.property_risk_assessment?.find(
+      (a) => a.property_name?.toLowerCase().includes(cp.property.name.toLowerCase().substring(0, 10))
+    );
     await prisma.property.update({
       where: { id: cp.propertyId },
       data: {
-        riskFactors: brief.risk_factors,
-        enrichmentBrief: brief.portfolio_overview,
+        riskFactors: propAssessment?.primary_risks || brief.risk_factors,
+        enrichmentBrief: propAssessment
+          ? `Risk: ${propAssessment.risk_level} | Exposure: ${propAssessment.estimated_annual_exposure} | ${propAssessment.primary_risks.join("; ")}`
+          : brief.portfolio_overview,
       },
     });
   }

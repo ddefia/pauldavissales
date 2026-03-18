@@ -22,6 +22,13 @@ interface EnrichedContact {
     personalization_hooks: string[];
     recommended_approach: string[];
     warm_lead_score_rationale: string;
+    warm_lead_score?: number;
+    company_intel?: {
+      estimated_size: string;
+      specialization: string;
+    };
+    competitive_landscape?: string;
+    best_time_to_call?: string;
   } | null;
 }
 
@@ -280,7 +287,7 @@ export default function EnrichmentPage() {
                       <div>
                         <Link
                           href={`/contacts/${contact.id}`}
-                          className="font-medium text-blue-600 hover:underline"
+                          className="font-medium text-[#1a1a1a] hover:text-[#C4A265]"
                           onClick={(e) => e.stopPropagation()}
                         >
                           {contact.fullName}
@@ -320,28 +327,52 @@ export default function EnrichmentPage() {
                   {/* Expanded details */}
                   {isExpanded && brief && (
                     <div className="mt-4 space-y-4 border-t pt-4">
-                      {/* Pain Triggers */}
-                      <div>
-                        <h4 className="text-sm font-semibold text-red-700 mb-1">
-                          Pain Triggers
-                        </h4>
-                        <ul className="list-disc list-inside text-sm text-gray-600 space-y-1">
-                          {brief.pain_triggers.map((t, i) => (
-                            <li key={i}>{t}</li>
-                          ))}
-                        </ul>
+                      {/* Company Intel + Score Row */}
+                      <div className="flex gap-4">
+                        {brief.company_intel && (
+                          <div className="flex-1 rounded bg-gray-50 p-3">
+                            <h4 className="text-xs font-semibold text-gray-500 uppercase mb-1">Company Intel</h4>
+                            <p className="text-sm text-gray-700">{brief.company_intel.estimated_size} — {brief.company_intel.specialization}</p>
+                          </div>
+                        )}
+                        {brief.warm_lead_score != null && (
+                          <div className="rounded bg-green-50 p-3 text-center min-w-[80px]">
+                            <p className="text-2xl font-bold text-green-700">{brief.warm_lead_score}</p>
+                            <p className="text-[10px] text-green-600">Lead Score</p>
+                          </div>
+                        )}
+                        {brief.best_time_to_call && (
+                          <div className="rounded bg-blue-50 p-3 min-w-[120px]">
+                            <h4 className="text-[10px] font-semibold text-blue-500 uppercase">Best Time</h4>
+                            <p className="text-xs text-blue-800">{brief.best_time_to_call}</p>
+                          </div>
+                        )}
                       </div>
 
-                      {/* Personalization Hooks */}
-                      <div>
-                        <h4 className="text-sm font-semibold text-blue-700 mb-1">
-                          Personalization Hooks
-                        </h4>
-                        <ul className="list-disc list-inside text-sm text-gray-600 space-y-1">
-                          {brief.personalization_hooks.map((h, i) => (
-                            <li key={i}>{h}</li>
-                          ))}
-                        </ul>
+                      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                        {/* Pain Triggers */}
+                        <div>
+                          <h4 className="text-sm font-semibold text-red-700 mb-1">
+                            Pain Triggers
+                          </h4>
+                          <ul className="list-disc list-inside text-sm text-gray-600 space-y-1">
+                            {brief.pain_triggers.map((t, i) => (
+                              <li key={i}>{t}</li>
+                            ))}
+                          </ul>
+                        </div>
+
+                        {/* Personalization Hooks */}
+                        <div>
+                          <h4 className="text-sm font-semibold text-blue-700 mb-1">
+                            Personalization Hooks
+                          </h4>
+                          <ul className="list-disc list-inside text-sm text-gray-600 space-y-1">
+                            {brief.personalization_hooks.map((h, i) => (
+                              <li key={i}>{h}</li>
+                            ))}
+                          </ul>
+                        </div>
                       </div>
 
                       {/* Recommended Approach */}
@@ -356,12 +387,24 @@ export default function EnrichmentPage() {
                         </ul>
                       </div>
 
+                      {/* Competitive Landscape */}
+                      {brief.competitive_landscape && (
+                        <div>
+                          <h4 className="text-sm font-semibold text-purple-700 mb-1">
+                            Competitive Landscape
+                          </h4>
+                          <p className="text-sm text-gray-600">
+                            {brief.competitive_landscape}
+                          </p>
+                        </div>
+                      )}
+
                       {/* Score Rationale */}
-                      <div>
-                        <h4 className="text-sm font-semibold text-purple-700 mb-1">
+                      <div className="rounded bg-purple-50 p-3">
+                        <h4 className="text-sm font-semibold text-purple-800 mb-1">
                           Warm Lead Assessment
                         </h4>
-                        <p className="text-sm text-gray-600">
+                        <p className="text-sm text-gray-700">
                           {brief.warm_lead_score_rationale}
                         </p>
                       </div>

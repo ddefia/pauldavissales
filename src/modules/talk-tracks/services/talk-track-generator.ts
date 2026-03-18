@@ -120,7 +120,7 @@ Create a complete talk track in JSON format:
 Make everything feel natural and specific to this prospect. A generic script is useless.`;
 
   const response = await getAnthropicClient().messages.create({
-    model: "claude-sonnet-4-5-20250929",
+    model: "claude-haiku-4-5-20251001",
     max_tokens: 3000,
     messages: [{ role: "user", content: prompt }],
   });
@@ -136,7 +136,12 @@ Make everything feel natural and specific to this prospect. A generic script is 
     jsonStr = jsonMatch[1];
   }
 
-  const talkTrack: GeneratedTalkTrack = JSON.parse(jsonStr.trim());
+  let talkTrack: GeneratedTalkTrack;
+  try {
+    talkTrack = JSON.parse(jsonStr.trim());
+  } catch {
+    throw new Error(`Failed to parse talk track response as JSON. Raw response: ${jsonStr.substring(0, 300)}`);
+  }
 
   // Save to database as a TalkTrack record
   const saved = await prisma.talkTrack.create({

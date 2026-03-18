@@ -121,7 +121,7 @@ Return JSON:
 Be realistic. Use actual South Florida cities, ZIP codes, and naming patterns. These should feel like real prospects a sales rep could follow up on.`;
 
   const response = await getAnthropicClient().messages.create({
-    model: "claude-sonnet-4-5-20250929",
+    model: "claude-haiku-4-5-20251001",
     max_tokens: 4000,
     messages: [{ role: "user", content: prompt }],
   });
@@ -137,7 +137,12 @@ Be realistic. Use actual South Florida cities, ZIP codes, and naming patterns. T
     jsonStr = jsonMatch[1];
   }
 
-  const result = JSON.parse(jsonStr.trim());
+  let result;
+  try {
+    result = JSON.parse(jsonStr.trim());
+  } catch {
+    throw new Error(`Failed to parse lead finder response as JSON. Raw response: ${jsonStr.substring(0, 300)}`);
+  }
 
   return {
     leads: result.leads || [],

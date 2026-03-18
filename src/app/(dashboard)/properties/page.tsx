@@ -74,7 +74,7 @@ export default function PropertiesPage() {
                 properties.map((p) => (
                   <TableRow key={p.id} className="hover:bg-gray-50">
                     <TableCell>
-                      <Link href={`/properties/${p.id}`} className="font-medium text-blue-600 hover:underline">
+                      <Link href={`/properties/${p.id}`} className="font-medium text-[#1a1a1a] hover:text-[#C4A265]">
                         {p.name}
                       </Link>
                     </TableCell>
