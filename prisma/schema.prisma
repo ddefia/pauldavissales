@@ -298,7 +298,8 @@ model Property {
   floodZone      String?
   coastalExposure Boolean?
   lastRenovation  Int?
-  riskLevel       String?
+  riskLevel        String?
+  opportunityScore Float?
 
   contacts      ContactProperty[]
   organizations OrgProperty[]

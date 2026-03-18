@@ -22,6 +22,7 @@ import {
 const mainNav = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { name: "Contacts", href: "/contacts", icon: Users },
+  { name: "Properties", href: "/properties", icon: Building2 },
   { name: "Pre-Call Reports", href: "/pre-call", icon: Zap },
   { name: "Lead Finder", href: "/lead-finder", icon: Search },
 ];
@@ -29,8 +30,7 @@ const mainNav = [
 const toolsNav = [
   { name: "Enrichment", href: "/enrichment", icon: Brain },
   { name: "Imports", href: "/imports", icon: Upload },
-  { name: "Organizations", href: "/organizations", icon: Building2 },
-  { name: "Properties", href: "/properties", icon: Home },
+  { name: "Organizations", href: "/organizations", icon: Home },
   { name: "PDFs", href: "/pdfs", icon: FileText },
   { name: "Admin", href: "/admin", icon: Shield },
 ];

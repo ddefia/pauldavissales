@@ -22,7 +22,8 @@ export async function GET(
           contact: {
             select: {
               id: true, fullName: true, title: true, email: true,
-              phone: true, status: true,
+              phone: true, status: true, compositeScore: true,
+              organization: { select: { name: true } },
             },
           },
         },
