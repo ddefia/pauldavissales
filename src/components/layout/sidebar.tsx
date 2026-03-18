@@ -43,71 +43,68 @@ export function Sidebar() {
   const [toolsOpen, setToolsOpen] = useState(toolsActive);
 
   return (
-    <div className="flex h-full w-64 flex-col border-r border-gray-200 bg-white">
-      {/* Brand Header — dark with gold logo */}
-      <div className="bg-[#1a1a1a] px-5 py-4">
-        <div className="flex items-center gap-2.5">
-          <span className="text-[#C4A265] text-[15px] font-extrabold tracking-wide">PAUL</span>
-          <span className="text-[#C4A265] text-[15px] font-extrabold tracking-wide">DAVIS</span>
+    <div className="flex h-full w-60 flex-col bg-[#1a1a1a]">
+      {/* Brand */}
+      <div className="px-5 pt-5 pb-3">
+        <div className="flex items-center gap-1.5">
+          <span className="text-[#C4A265] text-sm font-bold tracking-widest">PAUL DAVIS</span>
         </div>
-        <p className="text-[10px] text-gray-400 tracking-[0.15em] mt-0.5">PROPERTY RESTORATION EXPERTS</p>
+        <p className="text-[9px] text-gray-500 tracking-[0.2em] mt-0.5 uppercase">Property Restoration</p>
       </div>
 
-      {/* Territory bar */}
-      <div className="px-5 py-2 bg-[#ED1C24]">
-        <p className="text-[10px] text-white font-semibold tracking-wider uppercase">Palm Beach County &bull; Treasure Coast</p>
+      {/* Territory pill */}
+      <div className="mx-4 mb-4">
+        <div className="px-3 py-1.5 bg-white/5 rounded-lg border border-white/10">
+          <p className="text-[10px] text-gray-400 font-medium tracking-wider uppercase text-center">
+            Palm Beach · Treasure Coast
+          </p>
+        </div>
       </div>
 
-      <nav className="flex-1 space-y-0.5 px-3 py-3 overflow-y-auto">
+      <nav className="flex-1 space-y-0.5 px-3 overflow-y-auto">
         {mainNav.map((item) => {
-          const isActive =
-            pathname === item.href || pathname.startsWith(item.href + "/");
+          const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
           return (
             <Link
               key={item.name}
               href={item.href}
               className={cn(
-                "flex items-center gap-3 px-3 py-2 text-[13px] font-medium transition-colors rounded",
+                "flex items-center gap-3 px-3 py-2 text-[13px] font-medium transition-all rounded-lg",
                 isActive
-                  ? "bg-gray-100 text-[#1a1a1a] border-l-2 border-[#ED1C24]"
-                  : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                  ? "bg-white/10 text-white"
+                  : "text-gray-400 hover:bg-white/5 hover:text-gray-200"
               )}
             >
-              <item.icon className={cn("h-[18px] w-[18px]", isActive ? "text-[#ED1C24]" : "")} />
+              <item.icon className={cn("h-[16px] w-[16px]", isActive ? "text-[#C4A265]" : "")} />
               {item.name}
             </Link>
           );
         })}
 
-        <div className="pt-3">
+        <div className="pt-4">
           <button
             onClick={() => setToolsOpen(!toolsOpen)}
-            className="flex w-full items-center gap-2 px-3 py-1.5 text-[11px] font-semibold text-gray-400 uppercase tracking-wider hover:text-gray-600"
+            className="flex w-full items-center gap-2 px-3 py-1.5 text-[10px] font-semibold text-gray-500 uppercase tracking-wider hover:text-gray-400 transition-colors"
           >
-            {toolsOpen ? (
-              <ChevronDown className="h-3.5 w-3.5" />
-            ) : (
-              <ChevronRight className="h-3.5 w-3.5" />
-            )}
+            {toolsOpen ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
             Tools
           </button>
         </div>
         {toolsOpen &&
           toolsNav.map((item) => {
-            const isActive =
-              pathname === item.href || pathname.startsWith(item.href + "/");
+            const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
             return (
               <Link
                 key={item.name}
                 href={item.href}
                 className={cn(
-                  "flex items-center gap-3 px-3 py-1.5 pl-7 text-[13px] font-medium transition-colors rounded",
+                  "flex items-center gap-3 px-3 py-1.5 pl-7 text-[12px] font-medium transition-all rounded-lg",
                   isActive
-                    ? "bg-gray-100 text-[#1a1a1a]"
-                    : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
+                    ? "bg-white/10 text-white"
+                    : "text-gray-500 hover:bg-white/5 hover:text-gray-300"
                 )}
               >
-                <item.icon className={cn("h-4 w-4", isActive ? "text-[#C4A265]" : "")} />
+                <item.icon className={cn("h-3.5 w-3.5", isActive ? "text-[#C4A265]" : "")} />
                 {item.name}
               </Link>
             );
@@ -115,8 +112,8 @@ export function Sidebar() {
       </nav>
 
       {/* Footer */}
-      <div className="border-t border-gray-200 px-5 py-2.5 bg-gray-50">
-        <p className="text-[10px] text-gray-400 font-medium">Sales Intelligence Platform</p>
+      <div className="px-5 py-3 border-t border-white/5">
+        <p className="text-[10px] text-gray-600">Second Brain v1.0</p>
       </div>
     </div>
   );
