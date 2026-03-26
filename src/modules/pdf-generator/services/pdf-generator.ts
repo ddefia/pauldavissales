@@ -53,6 +53,36 @@ export interface PdfContent {
   nextSteps: string[];
 }
 
+interface PdfImages {
+  paulDavisLogo: string;
+  companyLogo: string | null;
+  streetView: string | null;
+  satelliteMap: string | null;
+  teamPhoto: string;
+}
+
+function buildImageUrls(orgDomain: string | null | undefined, propertyAddress: string, lat: number | null, lng: number | null): PdfImages {
+  const googleKey = process.env.GOOGLE_MAPS_API_KEY;
+
+  const paulDavisLogo = "https://pauldavis.com/wp-content/uploads/2024/11/PD_Logo_300dpi_RGB.png";
+  const teamPhoto = "https://pauldavis.com/wp-content/uploads/2024/11/BrighterTeam.png";
+
+  const companyLogo = orgDomain ? `https://logo.clearbit.com/${orgDomain}` : null;
+
+  let streetView: string | null = null;
+  if (googleKey && propertyAddress) {
+    const addr = encodeURIComponent(propertyAddress);
+    streetView = `https://maps.googleapis.com/maps/api/streetview?size=800x400&location=${addr}&key=${googleKey}`;
+  }
+
+  let satelliteMap: string | null = null;
+  if (googleKey && lat && lng) {
+    satelliteMap = `https://maps.googleapis.com/maps/api/staticmap?center=${lat},${lng}&zoom=17&size=600x300&maptype=satellite&markers=color:red|${lat},${lng}&key=${googleKey}`;
+  }
+
+  return { paulDavisLogo, companyLogo, streetView, satelliteMap, teamPhoto };
+}
+
 /**
  * Generates a comprehensive multi-page branded prospect PDF.
  * Uses Claude to create deeply personalized content.
@@ -65,7 +95,7 @@ export async function generateProspectPdf(
     prisma.contact.findUniqueOrThrow({
       where: { id: contactId },
       include: {
-        organization: { select: { name: true, orgType: true } },
+        organization: { select: { name: true, orgType: true, domain: true, website: true } },
         territory: { select: { name: true } },
       },
     }),
@@ -83,6 +113,15 @@ export async function generateProspectPdf(
       enrichment = JSON.parse(contact.enrichmentBrief);
     } catch {}
   }
+
+  // Build image URLs
+  const propertyAddress = [property.addressLine1, property.city, property.state, property.zipCode].filter(Boolean).join(", ");
+  const images = buildImageUrls(
+    contact.organization?.domain || contact.organization?.website?.replace(/^https?:\/\//, "").replace(/\/.*$/, ""),
+    propertyAddress,
+    property.latitude ? Number(property.latitude) : null,
+    property.longitude ? Number(property.longitude) : null
+  );
 
   const prompt = `You are creating a comprehensive, multi-page property assessment document for a Paul Davis Restoration sales rep. This is a leave-behind document for an in-person sales visit. It must be deeply specific, professional, and compelling.
 
@@ -184,13 +223,13 @@ Make every risk assessment REAL. Consider: building age deterioration, South Flo
 
   const content: PdfContent = JSON.parse(jsonStr.trim());
 
-  const html = generateHtml(content, contact.fullName, contact.title || "Decision Maker", contact.organization?.name || "", property.name);
+  const html = generateHtml(content, contact.fullName, contact.title || "Decision Maker", contact.organization?.name || "", property.name, images);
 
   // Store HTML in database (Vercel has read-only filesystem)
   const record = await prisma.generatedPdf.create({
     data: {
       propertyId: property.id,
-      templateId: "prospect-assessment-v2",
+      templateId: "prospect-assessment-v3",
       filePath: "db-stored",
       metadata: {
         contactId: contact.id,
@@ -205,8 +244,22 @@ Make every risk assessment REAL. Consider: building age deterioration, South Flo
   return { id: record.id, filePath: record.filePath, html };
 }
 
-function generateHtml(content: PdfContent, contactName: string, contactTitle: string, orgName: string, propertyName: string): string {
+// ─── HTML TEMPLATE ───────────────────────────────────────────────────────────
+
+function generateHtml(
+  content: PdfContent,
+  contactName: string,
+  contactTitle: string,
+  orgName: string,
+  propertyName: string,
+  images: PdfImages
+): string {
   const dateStr = new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+
+  // Brand colors
+  const GOLD = "#A1854A";
+  const RED = "#ED1C24";
+  const DARK = "#222222";
 
   const riskColor = (level: string) => {
     switch (level.toUpperCase()) {
@@ -219,9 +272,9 @@ function generateHtml(content: PdfContent, contactName: string, contactTitle: st
   };
 
   const severityDot = (s: string) => {
-    if (s === "High") return '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#dc2626;margin-right:6px;"></span>';
-    if (s === "Medium") return '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#d97706;margin-right:6px;"></span>';
-    return '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#16a34a;margin-right:6px;"></span>';
+    if (s === "High") return `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#dc2626;margin-right:6px;"></span>`;
+    if (s === "Medium") return `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#d97706;margin-right:6px;"></span>`;
+    return `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#16a34a;margin-right:6px;"></span>`;
   };
 
   const priorityBadge = (p: string) => {
@@ -230,6 +283,16 @@ function generateHtml(content: PdfContent, contactName: string, contactTitle: st
     return `<span style="display:inline-block;background:${c};color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;text-transform:uppercase;letter-spacing:0.5px;">${esc(p)}</span>`;
   };
 
+  // Page header with real logo (reused on pages 2-4)
+  const pageHeader = `
+    <div class="page-header">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <img src="${images.paulDavisLogo}" alt="Paul Davis" style="height:36px;width:auto;" />
+      </div>
+      <div style="font-size:10px;color:#9ca3af;">Property Assessment &bull; ${esc(propertyName)}</div>
+    </div>`;
+
+  // Property cards
   const propertyCards = content.propertyAssessments.map((prop) => {
     const rc = riskColor(prop.overallRisk);
     const risksRows = prop.risks.map((r) => `
@@ -242,7 +305,8 @@ function generateHtml(content: PdfContent, contactName: string, contactTitle: st
 
     return `
     <div style="margin-bottom:24px;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;">
-      <div style="background:#1a1a1a;color:#fff;padding:16px 20px;display:flex;justify-content:space-between;align-items:center;">
+      ${images.streetView ? `<img src="${images.streetView}" alt="${esc(prop.name)}" style="width:100%;height:200px;object-fit:cover;" onerror="this.parentElement.removeChild(this)" />` : ""}
+      <div style="background:${DARK};color:#fff;padding:16px 20px;display:flex;justify-content:space-between;align-items:center;">
         <div>
           <div style="font-size:16px;font-weight:700;">${esc(prop.name)}</div>
           <div style="font-size:12px;opacity:0.8;margin-top:2px;">${esc(prop.type)} &bull; ${esc(prop.location)}</div>
@@ -278,15 +342,24 @@ function generateHtml(content: PdfContent, contactName: string, contactTitle: st
       <td style="padding:10px 14px;border-bottom:1px solid #f3f4f6;text-align:center;">${priorityBadge(s.priority)}</td>
     </tr>`).join("");
 
-  const advantagesHtml = content.whyPaulDavis
-    .map((a) => `<li style="margin-bottom:8px;font-size:13px;color:#374151;padding-left:4px;">${esc(a)}</li>`)
-    .join("");
-
   const stepsHtml = content.nextSteps
     .map((s, i) => `<div style="display:flex;gap:12px;align-items:flex-start;margin-bottom:10px;">
-      <div style="width:28px;height:28px;border-radius:50%;background:#ED1C24;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;shrink:0;">${i + 1}</div>
+      <div style="width:28px;height:28px;border-radius:50%;background:${RED};color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;">${i + 1}</div>
       <p style="font-size:13px;color:#374151;margin:0;padding-top:4px;">${esc(s)}</p>
     </div>`).join("");
+
+  // Company logo block (only if domain exists)
+  const companyLogoHtml = images.companyLogo
+    ? `<img src="${images.companyLogo}" alt="Company" style="height:32px;width:auto;margin-top:8px;border-radius:4px;" onerror="this.style.display='none'" />`
+    : "";
+
+  // Satellite map block
+  const satelliteMapHtml = images.satelliteMap
+    ? `<div style="margin-bottom:20px;">
+        <div style="font-size:10px;color:#6b7280;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;font-weight:600;">Property Location</div>
+        <img src="${images.satelliteMap}" alt="Satellite view" style="width:100%;height:auto;border-radius:8px;border:1px solid #e5e7eb;" />
+       </div>`
+    : "";
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -317,36 +390,18 @@ function generateHtml(content: PdfContent, contactName: string, contactTitle: st
       justify-content: space-between;
       align-items: center;
       padding-bottom: 12px;
-      border-bottom: 2px solid #C4A265;
+      border-bottom: 2px solid ${GOLD};
       margin-bottom: 24px;
     }
-    .page-header-logo {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .pd-mark {
-      width: 32px;
-      height: 32px;
-      background: #1a1a1a;
-      border-radius: 4px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #C4A265;
-      font-weight: 900;
-      font-size: 14px;
-    }
-    .pd-name {
-      font-size: 16px;
-      font-weight: 800;
-      color: #C4A265;
-    }
-    .pd-sub {
-      font-size: 9px;
-      color: #6b7280;
+    .section-title {
+      font-size: 12px;
+      font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 1.5px;
+      color: ${DARK};
+      margin-bottom: 12px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid ${GOLD};
     }
     .page-footer {
       position: absolute;
@@ -359,16 +414,6 @@ function generateHtml(content: PdfContent, contactName: string, contactTitle: st
       color: #9ca3af;
       border-top: 1px solid #e5e7eb;
       padding-top: 8px;
-    }
-    .section-title {
-      font-size: 12px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 1.5px;
-      color: #1a1a1a;
-      margin-bottom: 12px;
-      padding-bottom: 6px;
-      border-bottom: 1px solid #C4A265;
     }
     @media print {
       .page { padding: 0.5in; }
@@ -392,34 +437,45 @@ function generateHtml(content: PdfContent, contactName: string, contactTitle: st
 <div class="page" style="display:flex;flex-direction:column;justify-content:space-between;">
   <div>
     <!-- Top bar -->
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:60px;">
-      <div class="page-header-logo">
-        <div class="pd-mark">PD</div>
-        <div>
-          <div class="pd-name">PAUL DAVIS</div>
-          <div class="pd-sub">Restoration</div>
-        </div>
-      </div>
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:40px;">
+      <img src="${images.paulDavisLogo}" alt="Paul Davis Restoration" style="height:48px;width:auto;" />
       <div style="text-align:right;font-size:11px;color:#6b7280;">
-        <div style="font-weight:600;color:#1a1a1a;">CONFIDENTIAL</div>
+        <div style="font-weight:600;color:${DARK};">CONFIDENTIAL</div>
         <div>Property Assessment</div>
         <div>${dateStr}</div>
       </div>
     </div>
 
     <!-- Title block -->
-    <div style="margin-bottom:48px;">
-      <div style="width:60px;height:4px;background:#C4A265;margin-bottom:24px;border-radius:2px;"></div>
-      <h1 style="font-size:36px;font-weight:800;color:#1a1a1a;line-height:1.2;margin-bottom:12px;">${esc(content.coverTitle)}</h1>
+    <div style="margin-bottom:32px;">
+      <div style="width:60px;height:4px;background:${GOLD};margin-bottom:24px;border-radius:2px;"></div>
+      <h1 style="font-size:34px;font-weight:800;color:${DARK};line-height:1.2;margin-bottom:12px;">${esc(content.coverTitle)}</h1>
       <p style="font-size:16px;color:#6b7280;max-width:500px;">${esc(content.coverSubtitle)}</p>
     </div>
 
+    <!-- Street View Hero -->
+    ${images.streetView ? `
+    <div style="margin-bottom:32px;border-radius:8px;overflow:hidden;border:1px solid #e5e7eb;">
+      <img src="${images.streetView}" alt="${esc(propertyName)}" style="width:100%;height:240px;object-fit:cover;" onerror="this.closest('div[style*=margin-bottom]').style.display='none'" />
+      <div style="background:${DARK};color:#fff;padding:10px 16px;font-size:12px;">
+        <span style="color:${GOLD};font-weight:700;">${esc(propertyName)}</span>
+        <span style="opacity:0.7;margin-left:8px;">${esc(content.propertyAssessments[0]?.location || "")}</span>
+      </div>
+    </div>` : ""}
+
     <!-- Prepared for block -->
-    <div style="background:#f9fafb;border-radius:8px;padding:24px;max-width:400px;">
-      <div style="font-size:10px;color:#9ca3af;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:12px;">Prepared For</div>
-      <div style="font-size:20px;font-weight:700;color:#1a1a1a;margin-bottom:4px;">${esc(contactName)}</div>
-      <div style="font-size:14px;color:#4b5563;">${esc(contactTitle)}</div>
-      ${orgName ? `<div style="font-size:14px;color:#6b7280;">${esc(orgName)}</div>` : ""}
+    <div style="display:flex;gap:20px;align-items:flex-start;">
+      <div style="flex:1;background:#f9fafb;border-radius:8px;padding:24px;border-left:4px solid ${GOLD};">
+        <div style="font-size:10px;color:#9ca3af;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:12px;">Prepared For</div>
+        <div style="font-size:20px;font-weight:700;color:${DARK};margin-bottom:4px;">${esc(contactName)}</div>
+        <div style="font-size:14px;color:#4b5563;">${esc(contactTitle)}</div>
+        ${orgName ? `<div style="font-size:14px;color:#6b7280;">${esc(orgName)}</div>` : ""}
+        ${companyLogoHtml}
+      </div>
+      ${images.satelliteMap ? `
+      <div style="width:200px;border-radius:8px;overflow:hidden;border:1px solid #e5e7eb;">
+        <img src="${images.satelliteMap}" alt="Location" style="width:100%;height:auto;" onerror="this.closest('div[style*=width\\:200px]').style.display='none'" />
+      </div>` : ""}
     </div>
   </div>
 
@@ -430,28 +486,19 @@ function generateHtml(content: PdfContent, contactName: string, contactTitle: st
       <div style="font-size:11px;color:#6b7280;">Palm Beach County &bull; Treasure Coast</div>
       <div style="font-size:11px;color:#9ca3af;">24/7 Emergency: (561) 478-7272</div>
     </div>
-    <div style="width:80px;height:3px;background:#C4A265;border-radius:2px;"></div>
+    <div style="width:80px;height:3px;background:${GOLD};border-radius:2px;"></div>
   </div>
 </div>
 
 <!-- ==================== PAGE 2: EXECUTIVE SUMMARY + CONTACT INTEL ==================== -->
 <div class="page">
-  <div class="page-header">
-    <div class="page-header-logo">
-      <div class="pd-mark">PD</div>
-      <div>
-        <div class="pd-name" style="font-size:13px;">PAUL DAVIS</div>
-        <div class="pd-sub" style="font-size:8px;">Restoration</div>
-      </div>
-    </div>
-    <div style="font-size:10px;color:#9ca3af;">Property Assessment &bull; ${esc(propertyName)}</div>
-  </div>
+  ${pageHeader}
 
   <div class="section-title">Executive Summary</div>
-  <div style="font-size:13px;color:#374151;margin-bottom:28px;white-space:pre-line;">${esc(content.executiveSummary)}</div>
+  <div style="font-size:13px;color:#374151;margin-bottom:24px;white-space:pre-line;">${esc(content.executiveSummary)}</div>
 
   <div class="section-title">Contact Intelligence</div>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:28px;">
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px;">
     <div style="background:#f9fafb;border-radius:6px;padding:14px;">
       <div style="font-size:10px;color:#6b7280;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;font-weight:600;">Role Analysis</div>
       <p style="font-size:12px;color:#374151;">${esc(content.contactBrief.roleAnalysis)}</p>
@@ -461,8 +508,8 @@ function generateHtml(content: PdfContent, contactName: string, contactTitle: st
       <p style="font-size:12px;color:#374151;">${esc(content.contactBrief.decisionAuthority)}</p>
     </div>
   </div>
-  <div style="background:#faf8f3;border-left:4px solid #C4A265;padding:12px 16px;border-radius:0 6px 6px 0;margin-bottom:28px;">
-    <div style="font-size:10px;color:#C4A265;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;font-weight:600;">Recommended Communication Approach</div>
+  <div style="background:#faf8f3;border-left:4px solid ${GOLD};padding:12px 16px;border-radius:0 6px 6px 0;margin-bottom:24px;">
+    <div style="font-size:10px;color:${GOLD};text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;font-weight:600;">Recommended Communication Approach</div>
     <p style="font-size:12px;color:#374151;">${esc(content.contactBrief.communicationStyle)}</p>
   </div>
 
@@ -479,16 +526,7 @@ function generateHtml(content: PdfContent, contactName: string, contactTitle: st
 
 <!-- ==================== PAGE 3: PROPERTY RISK ASSESSMENT ==================== -->
 <div class="page">
-  <div class="page-header">
-    <div class="page-header-logo">
-      <div class="pd-mark">PD</div>
-      <div>
-        <div class="pd-name" style="font-size:13px;">PAUL DAVIS</div>
-        <div class="pd-sub" style="font-size:8px;">Restoration</div>
-      </div>
-    </div>
-    <div style="font-size:10px;color:#9ca3af;">Property Assessment &bull; ${esc(propertyName)}</div>
-  </div>
+  ${pageHeader}
 
   <div class="section-title">Property Risk Assessment</div>
   ${propertyCards}
@@ -501,21 +539,12 @@ function generateHtml(content: PdfContent, contactName: string, contactTitle: st
 
 <!-- ==================== PAGE 4: SERVICES + WHY PD + CTA ==================== -->
 <div class="page">
-  <div class="page-header">
-    <div class="page-header-logo">
-      <div class="pd-mark">PD</div>
-      <div>
-        <div class="pd-name" style="font-size:13px;">PAUL DAVIS</div>
-        <div class="pd-sub" style="font-size:8px;">Restoration</div>
-      </div>
-    </div>
-    <div style="font-size:10px;color:#9ca3af;">Property Assessment &bull; ${esc(propertyName)}</div>
-  </div>
+  ${pageHeader}
 
   <div class="section-title">Recommended Services</div>
-  <table style="width:100%;border-collapse:collapse;margin-bottom:28px;border:1px solid #e5e7eb;border-radius:6px;overflow:hidden;">
+  <table style="width:100%;border-collapse:collapse;margin-bottom:24px;border:1px solid #e5e7eb;border-radius:6px;overflow:hidden;">
     <thead>
-      <tr style="background:#1a1a1a;color:#fff;">
+      <tr style="background:${DARK};color:#fff;">
         <th style="padding:10px 14px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;font-weight:600;">Service</th>
         <th style="padding:10px 14px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;font-weight:600;">Relevance</th>
         <th style="padding:10px 14px;text-align:center;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;font-weight:600;">Priority</th>
@@ -525,19 +554,21 @@ function generateHtml(content: PdfContent, contactName: string, contactTitle: st
   </table>
 
   <div class="section-title">Why Paul Davis for ${esc(propertyName)}</div>
-  <ul style="padding-left:20px;margin-bottom:24px;list-style:none;">
-    ${content.whyPaulDavis.map((a) => `<li style="margin-bottom:8px;font-size:13px;color:#374151;padding-left:4px;position:relative;">
-      <span style="position:absolute;left:-18px;color:#C4A265;font-weight:700;">&#10003;</span>${esc(a)}
-    </li>`).join("")}
-  </ul>
+  <div style="display:flex;gap:20px;margin-bottom:24px;">
+    <ul style="flex:1;padding-left:20px;list-style:none;">
+      ${content.whyPaulDavis.map((a) => `<li style="margin-bottom:8px;font-size:13px;color:#374151;padding-left:4px;position:relative;">
+        <span style="position:absolute;left:-18px;color:${GOLD};font-weight:700;">&#10003;</span>${esc(a)}
+      </li>`).join("")}
+    </ul>
+  </div>
 
-  <div style="background:#f9fafb;border-radius:6px;padding:14px;margin-bottom:24px;">
+  <div style="background:#f9fafb;border-radius:6px;padding:14px;margin-bottom:20px;">
     <div style="font-size:10px;color:#6b7280;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;font-weight:600;">Local Expertise</div>
     <p style="font-size:12px;color:#374151;">${esc(content.localExpertise)}</p>
   </div>
 
   <!-- CTA Block -->
-  <div style="background:#ED1C24;color:#fff;padding:24px;border-radius:8px;text-align:center;margin-bottom:24px;">
+  <div style="background:${RED};color:#fff;padding:24px;border-radius:8px;text-align:center;margin-bottom:20px;">
     <div style="font-size:18px;font-weight:700;margin-bottom:8px;">${esc(content.callToAction)}</div>
     <div style="font-size:13px;opacity:0.9;">Paul Davis Restoration &bull; (561) 478-7272 &bull; Available 24/7</div>
   </div>
