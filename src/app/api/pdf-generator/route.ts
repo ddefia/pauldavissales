@@ -39,7 +39,8 @@ export async function GET(request: NextRequest) {
 
   const { searchParams } = new URL(request.url);
   const propertyId = searchParams.get("propertyId") ?? undefined;
+  const contactId = searchParams.get("contactId") ?? undefined;
 
-  const pdfs = await listGeneratedPdfs(propertyId);
+  const pdfs = await listGeneratedPdfs({ propertyId, contactId });
   return NextResponse.json({ data: pdfs });
 }

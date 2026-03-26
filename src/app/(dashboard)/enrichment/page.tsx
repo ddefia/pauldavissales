@@ -1,10 +1,21 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Brain, Loader2, ChevronDown, ChevronUp, Sparkles } from "lucide-react";
+import {
+  Brain,
+  Loader2,
+  ChevronDown,
+  ChevronUp,
+  Sparkles,
+  Upload,
+  CheckCircle2,
+  XCircle,
+  AlertTriangle,
+  FileSpreadsheet,
+} from "lucide-react";
 import Link from "next/link";
 
 interface EnrichedContact {
@@ -41,6 +52,21 @@ interface BatchStatus {
   message?: string;
 }
 
+interface ApolloImportResult {
+  success: boolean;
+  totalRows: number;
+  matched: number;
+  updated: number;
+  unmatched: number;
+  errors: number;
+  orgsUpdated: number;
+  details: {
+    updatedContacts: { id: string; email: string; name: string }[];
+    unmatchedRows: { email: string; name: string; company: string }[];
+    errorRows: { email: string; error: string }[];
+  };
+}
+
 export default function EnrichmentPage() {
   const [contacts, setContacts] = useState<EnrichedContact[]>([]);
   const [loading, setLoading] = useState(true);
@@ -50,6 +76,64 @@ export default function EnrichmentPage() {
   const [stats, setStats] = useState({ enrichedCount: 0, pendingCount: 0 });
   const [batchSize, setBatchSize] = useState(10);
   const pollRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Apollo import state
+  const [apolloImporting, setApolloImporting] = useState(false);
+  const [apolloResult, setApolloResult] = useState<ApolloImportResult | null>(null);
+  const [apolloShowDetails, setApolloShowDetails] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleApolloImport = useCallback(async (file: File) => {
+    setApolloImporting(true);
+    setApolloResult(null);
+    setApolloShowDetails(false);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/enrichment/apollo-import", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setApolloResult({
+          success: false,
+          totalRows: 0,
+          matched: 0,
+          updated: 0,
+          unmatched: 0,
+          errors: 1,
+          orgsUpdated: 0,
+          details: {
+            updatedContacts: [],
+            unmatchedRows: [],
+            errorRows: [{ email: "", error: data.error || `HTTP ${res.status}` }],
+          },
+        });
+      } else {
+        setApolloResult(data);
+        loadData(); // Refresh enriched contacts list
+      }
+    } catch (err: any) {
+      setApolloResult({
+        success: false,
+        totalRows: 0,
+        matched: 0,
+        updated: 0,
+        unmatched: 0,
+        errors: 1,
+        orgsUpdated: 0,
+        details: {
+          updatedContacts: [],
+          unmatchedRows: [],
+          errorRows: [{ email: "", error: err?.message || "Import failed" }],
+        },
+      });
+    } finally {
+      setApolloImporting(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  }, []);
 
   function loadData() {
     setLoading(true);
@@ -186,6 +270,150 @@ export default function EnrichmentPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Apollo CSV Import */}
+      <Card className="border-purple-200 bg-purple-50/30">
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <FileSpreadsheet className="h-5 w-5 text-purple-600" />
+              <CardTitle className="text-base">Apollo Enrichment Import</CardTitle>
+            </div>
+            <Badge variant="outline" className="text-purple-600 border-purple-300">
+              CSV / XLSX
+            </Badge>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <p className="text-sm text-gray-600">
+            Upload an Apollo contacts export to enrich existing contacts with phone numbers,
+            LinkedIn profiles, AI research briefs, and company intel.
+          </p>
+          <div className="flex items-center gap-3">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".csv,.xlsx"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) handleApolloImport(file);
+              }}
+            />
+            <Button
+              variant="outline"
+              className="border-purple-300 text-purple-700 hover:bg-purple-100"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={apolloImporting}
+            >
+              {apolloImporting ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Upload className="mr-2 h-4 w-4" />
+              )}
+              {apolloImporting ? "Importing..." : "Upload Apollo CSV"}
+            </Button>
+          </div>
+
+          {/* Apollo Import Results */}
+          {apolloResult && (
+            <div
+              className={`rounded-lg p-4 mt-3 ${
+                apolloResult.success
+                  ? "bg-green-50 border border-green-200"
+                  : "bg-red-50 border border-red-200"
+              }`}
+            >
+              {apolloResult.success ? (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="h-5 w-5 text-green-600" />
+                    <p className="font-medium text-green-800">Import complete</p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                    <div className="rounded bg-white p-2 text-center">
+                      <p className="text-lg font-bold text-gray-900">{apolloResult.totalRows}</p>
+                      <p className="text-[10px] text-gray-500">Total Rows</p>
+                    </div>
+                    <div className="rounded bg-white p-2 text-center">
+                      <p className="text-lg font-bold text-green-600">{apolloResult.updated}</p>
+                      <p className="text-[10px] text-gray-500">Contacts Updated</p>
+                    </div>
+                    <div className="rounded bg-white p-2 text-center">
+                      <p className="text-lg font-bold text-blue-600">{apolloResult.orgsUpdated}</p>
+                      <p className="text-[10px] text-gray-500">Orgs Updated</p>
+                    </div>
+                    <div className="rounded bg-white p-2 text-center">
+                      <p className="text-lg font-bold text-amber-600">{apolloResult.unmatched}</p>
+                      <p className="text-[10px] text-gray-500">Unmatched</p>
+                    </div>
+                  </div>
+
+                  {/* Toggle details */}
+                  <button
+                    className="text-xs text-purple-600 hover:underline flex items-center gap-1"
+                    onClick={() => setApolloShowDetails(!apolloShowDetails)}
+                  >
+                    {apolloShowDetails ? (
+                      <ChevronUp className="h-3 w-3" />
+                    ) : (
+                      <ChevronDown className="h-3 w-3" />
+                    )}
+                    {apolloShowDetails ? "Hide details" : "Show details"}
+                  </button>
+
+                  {apolloShowDetails && (
+                    <div className="space-y-3 text-sm">
+                      {apolloResult.details.unmatchedRows.length > 0 && (
+                        <div>
+                          <p className="font-medium text-amber-700 flex items-center gap-1 mb-1">
+                            <AlertTriangle className="h-3 w-3" />
+                            Unmatched ({apolloResult.details.unmatchedRows.length}) — not in your database
+                          </p>
+                          <div className="max-h-40 overflow-y-auto rounded bg-white p-2">
+                            {apolloResult.details.unmatchedRows.slice(0, 20).map((r, i) => (
+                              <p key={i} className="text-xs text-gray-600">
+                                {r.name} — {r.email} ({r.company})
+                              </p>
+                            ))}
+                            {apolloResult.details.unmatchedRows.length > 20 && (
+                              <p className="text-xs text-gray-400 mt-1">
+                                ...and {apolloResult.details.unmatchedRows.length - 20} more
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                      {apolloResult.details.errorRows.length > 0 && (
+                        <div>
+                          <p className="font-medium text-red-700 flex items-center gap-1 mb-1">
+                            <XCircle className="h-3 w-3" />
+                            Errors ({apolloResult.details.errorRows.length})
+                          </p>
+                          <div className="max-h-32 overflow-y-auto rounded bg-white p-2">
+                            {apolloResult.details.errorRows.map((r, i) => (
+                              <p key={i} className="text-xs text-red-600 font-mono">
+                                {r.email}: {r.error}
+                              </p>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <XCircle className="h-5 w-5 text-red-600" />
+                  <p className="text-sm text-red-800">
+                    {apolloResult.details.errorRows[0]?.error || "Import failed"}
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Live Batch Progress */}
       {batchStatus && (

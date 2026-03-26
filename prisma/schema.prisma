@@ -104,6 +104,8 @@ model Contact {
   phoneSecondary String?
   phoneMobile    String?
   fax            String?
+  linkedinUrl    String?
+  apolloContactId String?
 
   addressLine1 String?
   addressLine2 String?
@@ -221,9 +223,13 @@ model Organization {
   state        String?
   zipCode      String?
 
-  employeeCount Int?
-  yearFounded   Int?
-  description   String? @db.Text
+  employeeCount  Int?
+  yearFounded    Int?
+  description    String? @db.Text
+  industry       String?
+  annualRevenue  String?
+  linkedinUrl    String?
+  apolloAccountId String?
 
   contacts          Contact[]
   managedProperties OrgProperty[]

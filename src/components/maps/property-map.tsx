@@ -117,7 +117,8 @@ export default function PropertyMap({ properties, onPropertyClick, height = 500,
       }
 
       // Legend
-      const legend = L.control({ position: "bottomleft" } as L.ControlOptions);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const legend = (L.control as any)({ position: "bottomleft" });
       legend.onAdd = () => {
         const div = L.DomUtil.create("div");
         div.innerHTML = `

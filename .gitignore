@@ -47,3 +47,4 @@ next-env.d.ts
 
 # generated PDFs
 /generated-pdfs
+.env*.local

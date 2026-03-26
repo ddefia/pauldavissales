@@ -15,6 +15,7 @@ import {
   Search,
   Shield,
   Zap,
+  MapPin,
   ChevronDown,
   ChevronRight,
 } from "lucide-react";
@@ -23,6 +24,7 @@ const mainNav = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { name: "Contacts", href: "/contacts", icon: Users },
   { name: "Properties", href: "/properties", icon: Building2 },
+  { name: "Map", href: "/map", icon: MapPin },
   { name: "Pre-Call Reports", href: "/pre-call", icon: Zap },
   { name: "Lead Finder", href: "/lead-finder", icon: Search },
 ];

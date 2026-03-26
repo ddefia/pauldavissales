@@ -14,7 +14,6 @@ import {
   ShieldCheck,
   Brain,
   FileText,
-  BarChart3,
   Loader2,
   Zap,
   Flame,
@@ -26,6 +25,9 @@ import {
   MessageSquare,
   Globe,
   Home,
+  Printer,
+  ExternalLink,
+  ChevronDown,
 } from "lucide-react";
 
 function ScoreBar({ label, score, color }: { label: string; score: number | null; color: string }) {
@@ -98,13 +100,39 @@ export default function ContactDetailPage() {
   const router = useRouter();
   const [contact, setContact] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [validating, setValidating] = useState(false);
-  const [enriching, setEnriching] = useState(false);
-  const [scoring, setScoring] = useState(false);
   const [talkTrack, setTalkTrack] = useState<any>(null);
-  const [generatingTrack, setGeneratingTrack] = useState(false);
   const [enrichBrief, setEnrichBrief] = useState<any>(null);
-  const [generatingReport, setGeneratingReport] = useState(false);
+  const [preparing, setPreparing] = useState(false);
+  const [prepareStep, setPrepareStep] = useState("");
+  const [generatingPdf, setGeneratingPdf] = useState(false);
+  const [pdfPropertyId, setPdfPropertyId] = useState<string>("");
+  const [showPdfPicker, setShowPdfPicker] = useState(false);
+  const [generatedPdfs, setGeneratedPdfs] = useState<any[]>([]);
+
+  function loadPdfs() {
+    fetch(`/api/pdf-generator?contactId=${params.id}`)
+      .then((r) => r.json())
+      .then((d) => setGeneratedPdfs(d.data || []))
+      .catch(() => {});
+  }
+
+  async function handleGeneratePdf(propertyId: string) {
+    setGeneratingPdf(true);
+    setShowPdfPicker(false);
+    try {
+      const res = await fetch("/api/pdf-generator", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ contactId: params.id, propertyId }),
+      });
+      const d = await res.json();
+      if (d.data?.id) {
+        window.open(`/api/pdf-generator/${d.data.id}?format=html`, "_blank");
+        loadPdfs();
+      }
+    } catch {}
+    setGeneratingPdf(false);
+  }
 
   function loadContact() {
     fetch(`/api/contacts/${params.id}`)
@@ -129,76 +157,68 @@ export default function ContactDetailPage() {
 
   useEffect(() => {
     loadContact();
+    loadPdfs();
     fetch(`/api/talk-tracks?contactId=${params.id}`)
       .then((r) => r.json())
       .then((d) => setTalkTrack(d.data))
       .catch(() => {});
   }, [params.id]);
 
-  async function runValidation() {
-    setValidating(true);
-    await fetch("/api/validation", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ contactIds: [params.id] }),
-    });
-    const res = await fetch(`/api/contacts/${params.id}`);
-    const d = await res.json();
-    setContact(d.data);
-    setValidating(false);
-  }
-
-  async function runEnrichment() {
-    setEnriching(true);
+  async function prepareForCall() {
+    setPreparing(true);
     try {
-      const res = await fetch("/api/enrichment", {
+      // Step 1: Validate
+      setPrepareStep("Validating contact info...");
+      await fetch("/api/validation", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ contactId: params.id }),
+        body: JSON.stringify({ contactIds: [params.id] }),
       });
-      const d = await res.json();
-      if (d.data) setEnrichBrief(d.data);
+
+      // Step 2: Enrich (skip if already enriched in last 7 days)
+      const needsEnrich = !contact.lastEnrichedAt ||
+        Date.now() - new Date(contact.lastEnrichedAt).getTime() > 7 * 24 * 60 * 60 * 1000;
+      if (needsEnrich) {
+        setPrepareStep("Researching contact & company...");
+        try {
+          const res = await fetch("/api/enrichment", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ contactId: params.id }),
+          });
+          const d = await res.json();
+          if (d.data) setEnrichBrief(d.data);
+        } catch {}
+      }
+
+      // Step 3: Score
+      setPrepareStep("Calculating lead score...");
+      await fetch("/api/scoring", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ contactId: params.id as string }),
+      });
+
+      // Step 4: Talk Track
+      setPrepareStep("Writing your talk track...");
+      try {
+        const res = await fetch("/api/talk-tracks", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ contactId: params.id }),
+        });
+        const d = await res.json();
+        if (d.data) setTalkTrack({ content: d.data });
+      } catch {}
+
+      // Reload contact with all fresh data
+      setPrepareStep("Done!");
       loadContact();
-    } catch {}
-    setEnriching(false);
-  }
-
-  async function runScoring() {
-    setScoring(true);
-    await fetch("/api/scoring", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ contactId: params.id as string }),
-    });
-    loadContact();
-    setScoring(false);
-  }
-
-  async function generateTalkTrack() {
-    setGeneratingTrack(true);
-    try {
-      const res = await fetch("/api/talk-tracks", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ contactId: params.id }),
-      });
-      const d = await res.json();
-      if (d.data) setTalkTrack({ content: d.data });
-    } catch {}
-    setGeneratingTrack(false);
-  }
-
-  async function generatePreCallReport() {
-    setGeneratingReport(true);
-    try {
-      await fetch("/api/pre-call-report", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ contactId: params.id }),
-      });
-      router.push(`/pre-call`);
-    } catch {}
-    setGeneratingReport(false);
+    } catch {
+      setPrepareStep("Something went wrong");
+    } finally {
+      setPreparing(false);
+    }
   }
 
   if (loading) return <ContactSkeleton />;
@@ -243,27 +263,75 @@ export default function ContactDetailPage() {
       </div>
 
       {/* Action Buttons */}
-      <div className="flex gap-2 flex-wrap">
-        <Button size="sm" variant="outline" onClick={runValidation} disabled={validating}>
-          {validating ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <ShieldCheck className="h-4 w-4 mr-1" />}
-          {validating ? "Validating..." : "Validate"}
+      <div className="flex items-center gap-3">
+        <Button
+          onClick={prepareForCall}
+          disabled={preparing}
+          className="bg-[#ED1C24] hover:bg-red-700 text-white px-6"
+        >
+          {preparing ? (
+            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+          ) : (
+            <Zap className="h-4 w-4 mr-2" />
+          )}
+          {preparing ? "Preparing..." : "Prepare for Call"}
         </Button>
-        <Button size="sm" variant="outline" onClick={runEnrichment} disabled={enriching}>
-          {enriching ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Brain className="h-4 w-4 mr-1" />}
-          {enriching ? "Enriching..." : "Enrich"}
-        </Button>
-        <Button size="sm" variant="outline" onClick={runScoring} disabled={scoring}>
-          {scoring ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <BarChart3 className="h-4 w-4 mr-1" />}
-          {scoring ? "Scoring..." : "Score"}
-        </Button>
-        <Button size="sm" variant="outline" onClick={generateTalkTrack} disabled={generatingTrack}>
-          {generatingTrack ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <FileText className="h-4 w-4 mr-1" />}
-          {generatingTrack ? "Generating..." : "Talk Track"}
-        </Button>
-        <Button size="sm" onClick={generatePreCallReport} disabled={generatingReport} className="bg-[#ED1C24] hover:bg-red-700 text-white">
-          {generatingReport ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Zap className="h-4 w-4 mr-1" />}
-          {generatingReport ? "Generating..." : "Full Pre-Call Report"}
-        </Button>
+
+        {/* Generate PDF Button */}
+        <div className="relative">
+          <Button
+            variant="outline"
+            disabled={generatingPdf || !contact.properties?.length}
+            onClick={() => {
+              if (contact.properties?.length === 1) {
+                handleGeneratePdf(contact.properties[0].property.id);
+              } else {
+                setShowPdfPicker(!showPdfPicker);
+              }
+            }}
+            className="border-[#C4A265] text-[#C4A265] hover:bg-[#C4A265]/10"
+          >
+            {generatingPdf ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <Printer className="h-4 w-4 mr-2" />
+            )}
+            {generatingPdf ? "Generating..." : "Generate PDF"}
+            {contact.properties?.length > 1 && <ChevronDown className="h-3 w-3 ml-1" />}
+          </Button>
+          {showPdfPicker && contact.properties?.length > 1 && (
+            <div className="absolute top-full left-0 mt-1 bg-white rounded-lg shadow-lg border z-50 min-w-[280px]">
+              <div className="p-2 border-b">
+                <p className="text-xs text-gray-500 font-medium">Select property for PDF</p>
+              </div>
+              {contact.properties.map((cp: any) => (
+                <button
+                  key={cp.property.id}
+                  className="w-full text-left px-3 py-2 hover:bg-gray-50 text-sm flex items-center justify-between"
+                  onClick={() => handleGeneratePdf(cp.property.id)}
+                >
+                  <div>
+                    <p className="font-medium">{cp.property.name}</p>
+                    <p className="text-xs text-gray-400">
+                      {cp.property.propertyType?.replaceAll("_", " ")}
+                      {cp.property.city && ` · ${cp.property.city}`}
+                    </p>
+                  </div>
+                  <FileText className="h-4 w-4 text-gray-300" />
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {preparing && prepareStep && (
+          <span className="text-sm text-gray-500 animate-pulse">{prepareStep}</span>
+        )}
+        {!preparing && talkTrack?.content && (
+          <span className="text-xs text-green-600 flex items-center gap-1">
+            <ShieldCheck className="h-3 w-3" /> Call prep ready
+          </span>
+        )}
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
@@ -666,6 +734,42 @@ export default function ContactDetailPage() {
               )}
             </CardContent>
           </Card>
+
+          {/* Generated PDFs */}
+          {generatedPdfs.length > 0 && (
+            <Card className="border-[#C4A265]/30">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <Printer className="h-4 w-4 text-[#C4A265]" /> Generated PDFs ({generatedPdfs.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  {generatedPdfs.map((pdf: any) => (
+                    <div key={pdf.id} className="rounded-lg border p-2 flex items-center justify-between">
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium truncate">{pdf.property?.name || "Property"}</p>
+                        <p className="text-[10px] text-gray-400">
+                          {new Date(pdf.createdAt).toLocaleDateString("en-US", {
+                            month: "short", day: "numeric", year: "numeric",
+                            hour: "numeric", minute: "2-digit",
+                          })}
+                        </p>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="shrink-0"
+                        onClick={() => window.open(`/api/pdf-generator/${pdf.id}?format=html`, "_blank")}
+                      >
+                        <ExternalLink className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Validation Results */}
           {validResults.length > 0 && (

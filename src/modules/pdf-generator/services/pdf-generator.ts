@@ -571,8 +571,12 @@ function esc(str: string): string {
     .replace(/'/g, "&#39;");
 }
 
-export async function listGeneratedPdfs(propertyId?: string) {
-  const where = propertyId ? { propertyId } : {};
+export async function listGeneratedPdfs(opts?: { propertyId?: string; contactId?: string }) {
+  const where: any = {};
+  if (opts?.propertyId) where.propertyId = opts.propertyId;
+  if (opts?.contactId) {
+    where.metadata = { path: ["contactId"], equals: opts.contactId };
+  }
   return prisma.generatedPdf.findMany({
     where,
     include: {
