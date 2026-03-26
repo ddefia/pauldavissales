@@ -30,6 +30,7 @@ export interface PdfContent {
   topRisks: { risk: string; detail: string }[];
   estimatedExposure: string;
   callToAction: string;
+  nextStep: string;
 }
 
 interface PdfImages {
@@ -48,7 +49,7 @@ function buildImageUrls(
   const googleKey = process.env.GOOGLE_MAPS_API_KEY;
   return {
     paulDavisLogo: "https://pauldavis.com/wp-content/uploads/2024/11/PD_Logo_300dpi_RGB.png",
-    companyLogo: orgDomain ? `https://logo.clearbit.com/${orgDomain}` : null,
+    companyLogo: orgDomain ? `https://t1.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://${orgDomain}&size=128` : null,
     streetView: googleKey && propertyAddress
       ? `https://maps.googleapis.com/maps/api/streetview?size=800x400&location=${encodeURIComponent(propertyAddress)}&key=${googleKey}`
       : null,
@@ -130,11 +131,15 @@ Return ONLY valid JSON (no markdown, no fences):
     {"risk": "Risk name", "detail": "One sentence"},
     {"risk": "Risk name", "detail": "One sentence"}
   ],
-  "estimatedExposure": "$XX,000 - $XX,000/year estimated restoration exposure for this property",
-  "callToAction": "One compelling sentence — specific next step for this prospect"
+  "estimatedExposure": "Realistic annual restoration budget estimate. Use conservative, BELIEVABLE numbers. For a small condo: $5,000-$15,000/yr. Mid-size building: $10,000-$40,000/yr. Large high-rise: $25,000-$75,000/yr. Format: '$X,000 - $X,000/yr'",
+  "callToAction": "A specific, actionable next step. Example: 'Schedule a free 15-minute property walkthrough this week' or 'Let us run a complimentary risk assessment for [property name]'. Must feel like a clear, easy thing to say yes to.",
+  "nextStep": "A second line reinforcing urgency or value. Example: 'Hurricane season starts June 1 — let's make sure you're covered.' or 'We'll deliver a custom restoration plan within 48 hours, no obligation.'"
 }
 
-Be SPECIFIC to their property. Reference South Florida conditions (hurricanes, humidity, salt air, flooding). Keep it short.`;
+IMPORTANT:
+- Keep estimated exposure REALISTIC and conservative — do NOT inflate numbers, they must be believable to a property manager who knows their budget.
+- The callToAction should be a specific meeting/call/walkthrough request, not vague.
+- Be SPECIFIC to their property. Reference South Florida conditions. Keep it short.`;
 
   const response = await getAnthropicClient().messages.create({
     model: "claude-haiku-4-5-20251001",
@@ -187,7 +192,10 @@ function generateHtml(
   const DARK = "#222222";
 
   const companyLogoHtml = images.companyLogo
-    ? `<img src="${images.companyLogo}" alt="" style="height:28px;width:auto;border-radius:3px;vertical-align:middle;margin-left:8px;" onerror="this.style.display='none'" />`
+    ? `<div style="margin-top:8px;display:flex;align-items:center;gap:8px;">
+        <img src="${images.companyLogo}" alt="" style="height:24px;width:24px;border-radius:4px;border:1px solid #e5e7eb;" onerror="this.parentElement.style.display='none'" />
+        <span style="font-size:10px;color:#9ca3af;">Company Profile</span>
+       </div>`
     : "";
 
   const risksHtml = content.topRisks.map((r) => `
@@ -252,7 +260,10 @@ function generateHtml(
   ${images.streetView ? `
   <div style="position:relative;height:220px;overflow:hidden;">
     <img src="${images.streetView}" alt="${esc(propertyName)}" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.style.display='none'" />
-    <div style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,0.8));padding:16px 40px;">
+    <div style="position:absolute;top:12px;left:16px;background:rgba(0,0,0,0.7);color:#fff;padding:6px 12px;border-radius:4px;font-size:10px;">
+      <span style="color:${GOLD};font-weight:700;">${esc(propertyName)}</span> &bull; ${esc(propertyAddress)}
+    </div>
+    <div style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,0.85));padding:20px 40px;">
       <div style="color:#fff;font-size:22px;font-weight:800;line-height:1.2;">${esc(content.headline)}</div>
       <div style="color:rgba(255,255,255,0.8);font-size:12px;margin-top:4px;">${esc(content.subtitle)}</div>
     </div>
@@ -271,7 +282,8 @@ function generateHtml(
         <div style="font-size:9px;color:#9ca3af;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:6px;">Prepared For</div>
         <div style="font-size:15px;font-weight:700;color:${DARK};">${esc(contactName)}</div>
         <div style="font-size:11px;color:#4b5563;">${esc(contactTitle)}</div>
-        <div style="font-size:11px;color:#6b7280;display:flex;align-items:center;">${esc(orgName)}${companyLogoHtml}</div>
+        ${orgName ? `<div style="font-size:11px;color:#6b7280;">${esc(orgName)}</div>` : ""}
+        ${companyLogoHtml}
       </div>
       <div style="flex:1;background:#f9fafb;border-radius:6px;padding:14px;border-left:3px solid ${RED};">
         <div style="font-size:9px;color:#9ca3af;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:6px;">Property</div>
@@ -309,9 +321,13 @@ function generateHtml(
 
   <!-- ─── CTA FOOTER ─── -->
   <div style="position:absolute;bottom:0;left:0;right:0;">
-    <div style="background:${RED};color:#fff;padding:16px 40px;text-align:center;">
-      <div style="font-size:15px;font-weight:700;">${esc(content.callToAction)}</div>
-      <div style="font-size:11px;opacity:0.9;margin-top:2px;">Paul Davis Restoration &bull; (561) 478-7272 &bull; 24/7 Emergency Response</div>
+    <div style="background:${RED};color:#fff;padding:20px 40px;text-align:center;">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:2px;opacity:0.8;margin-bottom:6px;">Your Next Step</div>
+      <div style="font-size:17px;font-weight:700;line-height:1.3;">${esc(content.callToAction)}</div>
+      ${content.nextStep ? `<div style="font-size:12px;opacity:0.9;margin-top:6px;font-style:italic;">${esc(content.nextStep)}</div>` : ""}
+      <div style="margin-top:10px;font-size:13px;font-weight:600;">
+        <span style="background:rgba(255,255,255,0.2);padding:4px 16px;border-radius:20px;">(561) 478-7272 &bull; 24/7</span>
+      </div>
     </div>
     <div style="background:${DARK};padding:8px 40px;display:flex;justify-content:space-between;font-size:9px;color:#6b7280;">
       <span>Paul Davis Restoration &bull; Palm Beach County &bull; Treasure Coast</span>
