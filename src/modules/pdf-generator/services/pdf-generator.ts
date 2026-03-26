@@ -1,7 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
 import prisma from "@/lib/prisma";
-import { writeFile, mkdir } from "fs/promises";
-import { join } from "path";
 import { readFileSync } from "fs";
 import { resolve } from "path";
 
@@ -188,22 +186,18 @@ Make every risk assessment REAL. Consider: building age deterioration, South Flo
 
   const html = generateHtml(content, contact.fullName, contact.title || "Decision Maker", contact.organization?.name || "", property.name);
 
-  const pdfDir = join(process.cwd(), "generated-pdfs");
-  await mkdir(pdfDir, { recursive: true });
-  const fileName = `${property.name.replace(/[^a-zA-Z0-9]/g, "_")}_${Date.now()}.html`;
-  const filePath = join(pdfDir, fileName);
-  await writeFile(filePath, html, "utf-8");
-
+  // Store HTML in database (Vercel has read-only filesystem)
   const record = await prisma.generatedPdf.create({
     data: {
       propertyId: property.id,
       templateId: "prospect-assessment-v2",
-      filePath: `/generated-pdfs/${fileName}`,
+      filePath: "db-stored",
       metadata: {
         contactId: contact.id,
         contactName: contact.fullName,
         propertyName: property.name,
         generatedContent: content as any,
+        htmlContent: html,
       } as any,
     },
   });

@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth-bypass";
 import prisma from "@/lib/prisma";
-import { readFile } from "fs/promises";
-import { join } from "path";
 
 export async function GET(
   request: NextRequest,
@@ -33,18 +31,17 @@ export async function GET(
 
   // Return the HTML content for rendering/printing
   if (format === "html") {
-    try {
-      const filePath = join(process.cwd(), pdf.filePath);
-      const html = await readFile(filePath, "utf-8");
+    const metadata = pdf.metadata as any;
+    const html = metadata?.htmlContent;
+    if (html) {
       return new NextResponse(html, {
         headers: { "Content-Type": "text/html" },
       });
-    } catch {
-      return NextResponse.json(
-        { error: "HTML file not found on disk" },
-        { status: 404 }
-      );
     }
+    return NextResponse.json(
+      { error: "HTML content not available" },
+      { status: 404 }
+    );
   }
 
   // Return metadata
