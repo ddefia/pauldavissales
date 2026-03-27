@@ -38,7 +38,7 @@ export async function GET() {
           territory: { select: { name: true } },
         },
         orderBy: { compositeScore: "desc" },
-        take: 30,
+        take: 10,
       }),
 
       // Territory breakdown

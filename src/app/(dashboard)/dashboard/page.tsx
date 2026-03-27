@@ -1,16 +1,13 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import dynamic from "next/dynamic";
 import Link from "next/link";
 import {
   Phone,
   Mail,
   ChevronRight,
-  MapPin,
   Sparkles,
   PhoneCall,
-  UserCheck,
   TrendingUp,
   Target,
   CalendarCheck,
@@ -20,16 +17,13 @@ import {
   Plus,
   Minus,
   Check,
+  Newspaper,
+  ExternalLink,
+  RefreshCw,
+  CloudRain,
+  Shield,
+  Home,
 } from "lucide-react";
-
-const TerritoryMap = dynamic(() => import("@/components/maps/territory-map"), {
-  ssr: false,
-  loading: () => (
-    <div className="h-[340px] rounded-2xl bg-gray-50/50 animate-pulse flex items-center justify-center">
-      <span className="text-sm text-gray-300">Loading map...</span>
-    </div>
-  ),
-});
 
 interface CallListContact {
   id: string;
@@ -64,19 +58,19 @@ interface WeeklyPlan {
   notes: string | null;
 }
 
+interface NewsItem {
+  title: string;
+  source: string;
+  url: string;
+  publishedAt: string;
+  snippet: string;
+  category: string;
+}
+
 interface DashboardData {
   totalContacts: number;
   totalOrganizations: number;
   callList: CallListContact[];
-  territoryBreakdown: Array<{ name: string; count: number }>;
-  mapContacts: Array<{
-    id: string;
-    fullName: string;
-    city: string | null;
-    territory: string | null;
-    compositeScore: number | null;
-    status: string;
-  }>;
   weeklyPlan: WeeklyPlan | null;
 }
 
@@ -84,11 +78,6 @@ function DashboardSkeleton() {
   return (
     <div className="space-y-5 max-w-[1100px] mx-auto pt-4">
       <div className="h-8 w-48 bg-gray-200 rounded-lg animate-pulse" />
-      <div className="grid grid-cols-3 gap-3">
-        {[...Array(3)].map((_, i) => (
-          <div key={i} className="h-20 bg-white rounded-2xl animate-pulse" />
-        ))}
-      </div>
       <div className="grid grid-cols-5 gap-5">
         <div className="col-span-3 space-y-2">
           {[...Array(6)].map((_, i) => (
@@ -161,7 +150,6 @@ function WeeklyTracker({
     purple: { bg: "bg-purple-50", text: "text-purple-600", ring: "ring-purple-200", bar: "bg-purple-500" },
   };
 
-  // Calculate which day of the week we're on
   const weekStart = new Date(plan.weekStart);
   const now = new Date();
   const dayOfWeek = Math.min(5, Math.max(1, Math.ceil((now.getTime() - weekStart.getTime()) / 86400000)));
@@ -169,7 +157,6 @@ function WeeklyTracker({
 
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-      {/* Header */}
       <div className="px-5 pt-4 pb-3 border-b border-gray-50">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -190,7 +177,6 @@ function WeeklyTracker({
         </div>
       </div>
 
-      {/* Metrics grid */}
       <div className="p-4 space-y-3">
         {metrics.map((m) => {
           const pct = m.target > 0 ? Math.min(100, Math.round((m.actual / m.target) * 100)) : 0;
@@ -222,7 +208,6 @@ function WeeklyTracker({
                     />
                   </div>
                 </div>
-                {/* +/- buttons */}
                 <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
                   <button
                     onClick={() => onUpdate(m.key, Math.max(0, m.actual - 1))}
@@ -243,7 +228,6 @@ function WeeklyTracker({
         })}
       </div>
 
-      {/* Overall progress */}
       <div className="px-5 py-3 bg-gray-50/50 border-t border-gray-50">
         {(() => {
           const totalTarget = plan.targetCalls + plan.targetEmails + plan.targetVoicemails + plan.targetMeetings + plan.targetPdfs;
@@ -269,7 +253,6 @@ function NoWeeklyPlan({ onCreated }: { onCreated: () => void }) {
   const createWeek1 = async () => {
     setCreating(true);
     try {
-      // Monday of current week
       const now = new Date();
       const monday = new Date(now);
       monday.setDate(now.getDate() - ((now.getDay() + 6) % 7));
@@ -315,6 +298,127 @@ function NoWeeklyPlan({ onCreated }: { onCreated: () => void }) {
   );
 }
 
+// ─── Market Intel / News Feed ─────────────────────────────────────────────────
+
+const categoryMeta: Record<string, { icon: typeof CloudRain; color: string; bg: string }> = {
+  "Storm & Flooding": { icon: CloudRain, color: "text-blue-500", bg: "bg-blue-50" },
+  "Insurance & Restoration": { icon: Shield, color: "text-amber-500", bg: "bg-amber-50" },
+  "Property Damage": { icon: Home, color: "text-red-500", bg: "bg-red-50" },
+};
+
+function MarketIntel() {
+  const [news, setNews] = useState<NewsItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [fetchedAt, setFetchedAt] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const load = useCallback(async (showRefresh = false) => {
+    if (showRefresh) setRefreshing(true);
+    else setLoading(true);
+    try {
+      const res = await fetch("/api/dashboard/news");
+      const json = await res.json();
+      setNews(json.data || []);
+      setFetchedAt(json.fetchedAt);
+    } catch {
+      // silent
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  const timeAgo = (iso: string) => {
+    const diff = Date.now() - new Date(iso).getTime();
+    const h = Math.floor(diff / 3_600_000);
+    const d = Math.floor(h / 24);
+    if (d > 0) return `${d}d ago`;
+    if (h > 0) return `${h}h ago`;
+    return "just now";
+  };
+
+  return (
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+      <div className="px-5 pt-4 pb-3 border-b border-gray-50 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Newspaper className="h-4 w-4 text-[#C4A265]" />
+          <h2 className="text-sm font-semibold text-gray-800">Market Intel</h2>
+          <span className="text-[10px] text-gray-300 font-medium">South Florida</span>
+        </div>
+        <button
+          onClick={() => load(true)}
+          disabled={refreshing}
+          className="p-1.5 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-40"
+          title="Refresh news"
+        >
+          <RefreshCw className={`h-3.5 w-3.5 text-gray-400 ${refreshing ? "animate-spin" : ""}`} />
+        </button>
+      </div>
+
+      {loading ? (
+        <div className="p-4 space-y-3">
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="space-y-1.5">
+              <div className="h-3.5 bg-gray-100 rounded animate-pulse w-full" />
+              <div className="h-3 bg-gray-50 rounded animate-pulse w-3/4" />
+            </div>
+          ))}
+        </div>
+      ) : news.length === 0 ? (
+        <div className="px-5 py-8 text-center">
+          <p className="text-xs text-gray-400">No news available right now.</p>
+        </div>
+      ) : (
+        <div className="divide-y divide-gray-50">
+          {news.map((item, i) => {
+            const meta = categoryMeta[item.category] || categoryMeta["Property Damage"];
+            const Icon = meta.icon;
+            return (
+              <a
+                key={i}
+                href={item.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-start gap-3 px-4 py-3.5 hover:bg-gray-50/80 transition-colors group"
+              >
+                <div className={`w-7 h-7 rounded-lg ${meta.bg} flex items-center justify-center shrink-0 mt-0.5`}>
+                  <Icon className={`h-3.5 w-3.5 ${meta.color}`} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-semibold text-gray-800 line-clamp-2 group-hover:text-[#C4A265] transition-colors leading-snug">
+                    {item.title}
+                  </p>
+                  {item.snippet && (
+                    <p className="text-[11px] text-gray-400 mt-0.5 line-clamp-1">{item.snippet}</p>
+                  )}
+                  <div className="flex items-center gap-1.5 mt-1">
+                    <span className="text-[10px] font-medium text-gray-400">{item.source}</span>
+                    <span className="text-gray-200">·</span>
+                    <span className="text-[10px] text-gray-300">{timeAgo(item.publishedAt)}</span>
+                    <span className="text-gray-200">·</span>
+                    <span className={`text-[10px] font-medium ${meta.color}`}>{item.category}</span>
+                  </div>
+                </div>
+                <ExternalLink className="h-3.5 w-3.5 text-gray-200 group-hover:text-[#C4A265] shrink-0 mt-1 transition-colors" />
+              </a>
+            );
+          })}
+        </div>
+      )}
+
+      {fetchedAt && !loading && (
+        <div className="px-5 py-2.5 bg-gray-50/50 border-t border-gray-50">
+          <p className="text-[10px] text-gray-300">Updated {timeAgo(fetchedAt)}</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Main Dashboard ──────────────────────────────────────────────────────────
 
 export default function DashboardPage() {
@@ -338,7 +442,6 @@ export default function DashboardPage() {
   const handleUpdateMetric = async (field: string, value: number) => {
     if (!data?.weeklyPlan) return;
 
-    // Optimistic update
     setData((prev) =>
       prev
         ? {
@@ -360,9 +463,6 @@ export default function DashboardPage() {
   if (loading) return <DashboardSkeleton />;
   if (!data) return null;
 
-  const withPhone = data.callList.filter((c) => c.phone || c.phoneMobile).length;
-  const withResearch = data.callList.filter((c) => c.hasEnrichment).length;
-
   return (
     <div className="max-w-[1100px] mx-auto space-y-5 pt-2">
       {/* Header */}
@@ -373,39 +473,6 @@ export default function DashboardPage() {
         <p className="text-sm text-gray-400 mt-0.5">
           Your top {data.callList.length} leads, ready to go
         </p>
-      </div>
-
-      {/* Stats strip */}
-      <div className="grid grid-cols-3 gap-3">
-        <div className="bg-white rounded-2xl border border-gray-100 px-5 py-4 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center shrink-0">
-            <PhoneCall className="h-5 w-5 text-emerald-500" />
-          </div>
-          <div>
-            <p className="text-2xl font-bold text-gray-900">{withPhone}</p>
-            <p className="text-xs text-gray-400">Ready to call</p>
-          </div>
-        </div>
-        <div className="bg-white rounded-2xl border border-gray-100 px-5 py-4 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center shrink-0">
-            <Sparkles className="h-5 w-5 text-purple-500" />
-          </div>
-          <div>
-            <p className="text-2xl font-bold text-gray-900">{withResearch}</p>
-            <p className="text-xs text-gray-400">AI researched</p>
-          </div>
-        </div>
-        <div className="bg-white rounded-2xl border border-gray-100 px-5 py-4 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center shrink-0">
-            <TrendingUp className="h-5 w-5 text-blue-500" />
-          </div>
-          <div>
-            <p className="text-2xl font-bold text-gray-900">
-              {data.totalContacts.toLocaleString()}
-            </p>
-            <p className="text-xs text-gray-400">Total contacts</p>
-          </div>
-        </div>
       </div>
 
       {/* Main: Call List + Right Column */}
@@ -431,12 +498,10 @@ export default function DashboardPage() {
                   href={`/contacts/${contact.id}`}
                   className="flex items-start gap-3 px-5 py-3.5 hover:bg-gray-50/80 transition-colors group"
                 >
-                  {/* Rank */}
                   <span className="text-xs font-bold text-gray-300 w-4 pt-1 shrink-0 text-right tabular-nums">
                     {i + 1}
                   </span>
 
-                  {/* Info */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <p className="text-sm font-semibold text-gray-900 truncate group-hover:text-[#C4A265] transition-colors">
@@ -458,7 +523,6 @@ export default function DashboardPage() {
                     </p>
                   </div>
 
-                  {/* Contact methods */}
                   <div className="flex items-center gap-1.5 shrink-0 pt-1">
                     {(contact.phone || contact.phoneMobile) && (
                       <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-emerald-50 text-emerald-600">
@@ -480,69 +544,15 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Right column — Weekly Plan + Map + Territory */}
+        {/* Right column — Weekly Plan + Market Intel */}
         <div className="lg:col-span-2 space-y-4">
-          {/* Weekly Plan Tracker */}
           {data.weeklyPlan ? (
             <WeeklyTracker plan={data.weeklyPlan} onUpdate={handleUpdateMetric} />
           ) : (
             <NoWeeklyPlan onCreated={loadData} />
           )}
 
-          {/* Map */}
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-            <div className="px-5 pt-4 pb-2 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <MapPin className="h-4 w-4 text-[#C4A265]" />
-                <h2 className="text-sm font-semibold text-gray-800">
-                  Your Territory
-                </h2>
-              </div>
-              <Link
-                href="/map"
-                className="text-xs text-[#C4A265] hover:underline font-medium flex items-center gap-0.5"
-              >
-                Full map <ChevronRight className="h-3 w-3" />
-              </Link>
-            </div>
-            <div className="px-2 pb-2">
-              <TerritoryMap contacts={data.mapContacts} height={340} />
-            </div>
-          </div>
-
-          {/* Territory breakdown */}
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-            <h2 className="text-sm font-semibold text-gray-800 mb-4">
-              By County
-            </h2>
-            <div className="space-y-3">
-              {data.territoryBreakdown
-                .sort((a, b) => b.count - a.count)
-                .map((t) => {
-                  const pct = Math.round(
-                    (t.count / data.totalContacts) * 100
-                  );
-                  return (
-                    <div key={t.name}>
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-xs font-medium text-gray-700">
-                          {t.name}
-                        </span>
-                        <span className="text-xs text-gray-400 tabular-nums">
-                          {t.count.toLocaleString()}
-                        </span>
-                      </div>
-                      <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                        <div
-                          className="h-full rounded-full bg-[#C4A265] transition-all duration-700"
-                          style={{ width: `${pct}%` }}
-                        />
-                      </div>
-                    </div>
-                  );
-                })}
-            </div>
-          </div>
+          <MarketIntel />
         </div>
       </div>
     </div>
