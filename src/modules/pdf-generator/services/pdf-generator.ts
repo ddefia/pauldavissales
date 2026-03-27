@@ -256,11 +256,8 @@ function generateHtml(
   // Services
   const servicesHtml = c.services.map(s => `
     <tr>
-      <td style="padding:5px 8px;font-size:10px;font-weight:600;color:${D};border-bottom:1px solid #f3f4f6;">${e(s.name)}</td>
+      <td style="padding:5px 8px;font-size:10px;font-weight:600;color:${D};border-bottom:1px solid #f3f4f6;white-space:nowrap;">${e(s.name)}</td>
       <td style="padding:5px 8px;font-size:10px;color:#4b5563;border-bottom:1px solid #f3f4f6;">${e(s.why)}</td>
-      <td style="padding:5px 8px;text-align:center;border-bottom:1px solid #f3f4f6;">
-        <span style="background:${priColor(s.priority)};color:#fff;font-size:9px;font-weight:700;padding:1px 6px;border-radius:8px;">${e(s.priority)}</span>
-      </td>
     </tr>`).join("");
 
   // Why us
@@ -273,6 +270,20 @@ function generateHtml(
   // Pain points
   const painHtml = c.contactBrief.painPoints.map(p => `
     <li style="font-size:10px;color:#374151;margin-bottom:3px;padding-left:2px;">${e(p)}</li>`).join("");
+
+  // ── Risk counts for chart ──
+  const highCount   = c.propertyRisks.filter(r => r.severity === "High").length;
+  const medCount    = c.propertyRisks.filter(r => r.severity === "Medium").length;
+  const lowCount    = c.propertyRisks.filter(r => r.severity === "Low").length;
+  const totalRisks  = c.propertyRisks.length || 1;
+
+  // ── Service groups for timeline chart ──
+  const immediate  = c.services.filter(s => s.priority === "Immediate");
+  const nearTerm   = c.services.filter(s => s.priority === "Near-Term");
+  const preventive = c.services.filter(s => s.priority === "Preventive");
+
+  const svcBarHtml = (items: typeof c.services, color: string) =>
+    items.map(s => `<div style="background:${color};color:#fff;font-size:9px;font-weight:600;padding:4px 10px;border-radius:4px;margin-bottom:3px;">${e(s.name)}</div>`).join("");
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -290,169 +301,209 @@ function generateHtml(
 </head>
 <body>
 
-<!-- ═══════════════════ PAGE 1: FULL COVER ═══════════════════ -->
+<!-- ═══════════════════ PAGE 1: COVER ═══════════════════ -->
 <div class="page" style="display:flex;flex-direction:column;background:#fff;">
 
-  <!-- Top dark band: PD logo + label -->
-  <div style="background:${D};padding:28px 48px 24px;display:flex;justify-content:space-between;align-items:flex-start;">
-    <img src="${img.paulDavisLogo}" alt="Paul Davis" style="height:52px;" />
+  <!-- Header -->
+  <div style="background:${D};padding:26px 48px 22px;display:flex;justify-content:space-between;align-items:center;">
+    <img src="${img.paulDavisLogo}" alt="Paul Davis" style="height:48px;" />
     <div style="text-align:right;">
-      <div style="color:${G};font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;">Property Assessment</div>
+      <div style="color:${G};font-size:9px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;">Property Assessment</div>
       <div style="color:#6b7280;font-size:10px;margin-top:3px;">Prepared for ${e(dateStr)}</div>
     </div>
   </div>
 
-  <!-- Hero image (street view) or dark gradient fallback -->
+  <!-- Street view hero -->
   ${img.streetView ? `
-  <div style="position:relative;height:310px;overflow:hidden;">
-    <img src="${img.streetView}" alt="${e(propertyName)}" style="width:100%;height:100%;object-fit:cover;" onerror="this.src='';this.parentElement.style.background='linear-gradient(160deg,#2a2a2a 0%,#1a1a1a 100%)'" />
-    <div style="position:absolute;inset:0;background:linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.65) 100%);"></div>
-    <div style="position:absolute;bottom:24px;left:48px;right:48px;">
-      <div style="color:${G};font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;">Property</div>
-      <div style="color:#fff;font-size:26px;font-weight:800;line-height:1.15;text-shadow:0 2px 8px rgba(0,0,0,0.5);">${e(propertyName)}</div>
-      <div style="color:rgba(255,255,255,0.75);font-size:12px;margin-top:4px;">${e(propertyAddress)}</div>
+  <div style="position:relative;height:340px;overflow:hidden;flex-shrink:0;">
+    <img src="${img.streetView}" alt="${e(propertyName)}" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.style.background='linear-gradient(160deg,#2a2a2a,#1a1a1a)'" />
+    <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,0) 30%,rgba(0,0,0,0.72) 100%);"></div>
+    <div style="position:absolute;bottom:28px;left:48px;right:48px;">
+      <div style="color:${G};font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:5px;">Property</div>
+      <div style="color:#fff;font-size:28px;font-weight:800;line-height:1.15;text-shadow:0 2px 10px rgba(0,0,0,0.6);">${e(propertyName)}</div>
+      <div style="color:rgba(255,255,255,0.7);font-size:11px;margin-top:5px;">${e(propertyAddress)}</div>
     </div>
   </div>` : `
-  <div style="height:310px;background:linear-gradient(160deg,#2d2d2d 0%,#1a1a1a 100%);display:flex;flex-direction:column;justify-content:flex-end;padding:24px 48px;">
-    <div style="color:${G};font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;">Property</div>
-    <div style="color:#fff;font-size:26px;font-weight:800;line-height:1.15;">${e(propertyName)}</div>
-    <div style="color:rgba(255,255,255,0.6);font-size:12px;margin-top:4px;">${e(propertyAddress)}</div>
+  <div style="height:340px;flex-shrink:0;background:linear-gradient(160deg,#2d2d2d,#1a1a1a);display:flex;flex-direction:column;justify-content:flex-end;padding:28px 48px;">
+    <div style="color:${G};font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:5px;">Property</div>
+    <div style="color:#fff;font-size:28px;font-weight:800;line-height:1.15;">${e(propertyName)}</div>
+    <div style="color:rgba(255,255,255,0.6);font-size:11px;margin-top:5px;">${e(propertyAddress)}</div>
   </div>`}
 
-  <!-- Gold divider -->
-  <div style="height:4px;background:linear-gradient(to right, ${G}, #c4a265, ${G});"></div>
+  <!-- Gold bar -->
+  <div style="height:3px;background:linear-gradient(to right,${G},#d4b47a,${G});flex-shrink:0;"></div>
 
-  <!-- Lower content area -->
-  <div style="flex:1;padding:36px 48px;display:flex;flex-direction:column;justify-content:space-between;">
-
-    <!-- Prepared For + Property side by side -->
-    <div style="display:flex;gap:24px;margin-bottom:28px;">
+  <!-- Lower: Prepared For + Property stats -->
+  <div style="flex:1;padding:32px 48px;display:flex;flex-direction:column;justify-content:space-between;">
+    <div style="display:flex;gap:28px;margin-bottom:24px;">
 
       <!-- Prepared For -->
-      <div style="flex:1;background:#f9fafb;border-radius:8px;padding:20px;border-top:3px solid ${G};">
-        <div style="font-size:9px;color:${G};font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;">Prepared For</div>
-        ${img.companyLogo ? `
-        <div style="margin-bottom:10px;">
-          <img src="${img.companyLogo}" alt="" style="height:36px;max-width:120px;object-fit:contain;border-radius:4px;" onerror="this.style.display='none'" />
-        </div>` : ""}
-        <div style="font-size:20px;font-weight:800;color:${D};line-height:1.2;">${e(contactName)}</div>
-        <div style="font-size:12px;color:#4b5563;margin-top:3px;">${e(contactTitle)}</div>
-        ${orgName ? `<div style="font-size:12px;color:#6b7280;margin-top:2px;font-weight:500;">${e(orgName)}</div>` : ""}
+      <div style="flex:1.1;padding:22px;background:#f9fafb;border-radius:8px;border-top:3px solid ${G};">
+        <div style="font-size:8px;color:${G};font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:14px;">Prepared For</div>
+        <div style="font-size:22px;font-weight:800;color:${D};line-height:1.15;">${e(contactName)}</div>
+        <div style="font-size:12px;color:#4b5563;margin-top:4px;">${e(contactTitle)}</div>
+        ${orgName ? `<div style="font-size:11px;color:#9ca3af;margin-top:3px;">${e(orgName)}</div>` : ""}
       </div>
 
-      <!-- Property Details -->
-      <div style="flex:1;background:#f9fafb;border-radius:8px;padding:20px;border-top:3px solid ${R};">
-        <div style="font-size:9px;color:${R};font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;">Property Details</div>
-        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;">
-          ${stats.map(s => `<span style="background:#e5e7eb;padding:3px 10px;border-radius:12px;font-size:10px;color:#374151;font-weight:500;">${e(s!)}</span>`).join("")}
+      <!-- Property stats — no map here -->
+      <div style="flex:1;padding:22px;background:#f9fafb;border-radius:8px;border-top:3px solid ${D};">
+        <div style="font-size:8px;color:#6b7280;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:14px;">Property at a Glance</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;">
+          ${stats.map(s => `<span style="background:#e5e7eb;padding:3px 10px;border-radius:10px;font-size:10px;color:#374151;font-weight:500;">${e(s!)}</span>`).join("")}
         </div>
-        <div style="margin-top:8px;font-size:10px;color:#6b7280;">
-          Est. annual exposure: <span style="font-weight:600;color:${D};">${e(c.estimatedExposure)}</span>
+        <div style="font-size:10px;color:#6b7280;margin-top:4px;">
+          Est. annual exposure: <span style="font-weight:700;color:${D};">${e(c.estimatedExposure)}</span>
         </div>
-        ${img.satelliteMap ? `<div style="margin-top:12px;border-radius:6px;overflow:hidden;border:1px solid #e5e7eb;"><img src="${img.satelliteMap}" alt="" style="width:100%;height:90px;object-fit:cover;display:block;" onerror="this.parentElement.style.display='none'" /></div>` : ""}
       </div>
     </div>
 
-    <!-- Subtitle -->
-    <div style="padding:16px 24px;border-left:3px solid ${G};background:#f9fafb;border-radius:0 6px 6px 0;">
-      <div style="color:#374151;font-size:12px;line-height:1.6;">${e(c.subtitle)}</div>
+    <!-- Subtitle statement -->
+    <div style="padding:14px 20px;border-left:3px solid ${G};background:#faf8f3;border-radius:0 6px 6px 0;">
+      <div style="color:#374151;font-size:11px;line-height:1.65;">${e(c.subtitle)}</div>
     </div>
 
-    <!-- Footer -->
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:24px;padding-top:14px;border-top:1px solid #e5e7eb;">
-      <div style="font-size:10px;color:#9ca3af;">Paul Davis Restoration &bull; Palm Beach County &bull; Treasure Coast &bull; (561) 478-7272</div>
-      <div style="font-size:10px;color:#9ca3af;">Confidential &bull; Page 1 of 3</div>
+    <!-- Cover footer -->
+    <div style="display:flex;justify-content:space-between;margin-top:20px;padding-top:12px;border-top:1px solid #e5e7eb;">
+      <div style="font-size:9px;color:#9ca3af;">Paul Davis Restoration &bull; Palm Beach &bull; Treasure Coast &bull; (561) 478-7272</div>
+      <div style="font-size:9px;color:#9ca3af;">Page 1 of 3</div>
     </div>
   </div>
 </div>
 
-<!-- ═══════════════════ PAGE 2: CONTACT INTEL + PROPERTY ═══════════════════ -->
+<!-- ═══════════════════ PAGE 2: ASSESSMENT ═══════════════════ -->
 <div class="page" style="padding:0.5in;">
   ${pageHeader}
 
-  <!-- Headline -->
-  <div style="margin-bottom:20px;">
-    <div style="width:40px;height:3px;background:${G};margin-bottom:12px;border-radius:2px;"></div>
-    <h1 style="font-size:24px;font-weight:800;color:${D};line-height:1.2;margin-bottom:6px;">${e(c.headline)}</h1>
-    <p style="font-size:12px;color:#6b7280;max-width:480px;">${e(c.subtitle)}</p>
-  </div>
-
-  <!-- Contact Intel -->
-  <div style="background:#faf8f3;border-radius:8px;padding:16px;border-left:3px solid ${G};margin-bottom:20px;">
-    <div style="font-size:9px;color:${G};text-transform:uppercase;letter-spacing:1.5px;font-weight:700;margin-bottom:10px;">What We Understand About Your Situation</div>
-    <p style="font-size:11px;color:#374151;margin-bottom:6px;">${e(c.contactBrief.roleInsight)}</p>
-    <p style="font-size:10px;color:#6b7280;font-style:italic;">${e(c.contactBrief.decisionStyle)}</p>
-    <div style="margin-top:10px;">
-      <div style="font-size:9px;color:#6b7280;text-transform:uppercase;letter-spacing:1px;font-weight:600;margin-bottom:5px;">Day-to-Day Considerations</div>
-      <ul style="list-style:none;padding:0;">${painHtml}</ul>
+  <!-- Headline + two-col layout -->
+  <div style="display:flex;gap:20px;margin-bottom:18px;">
+    <!-- Left: headline + context -->
+    <div style="flex:1.5;">
+      <div style="width:36px;height:3px;background:${G};margin-bottom:10px;border-radius:2px;"></div>
+      <h2 style="font-size:20px;font-weight:800;color:${D};line-height:1.2;margin-bottom:8px;">${e(c.headline)}</h2>
+      <div style="background:#faf8f3;border-radius:6px;padding:14px;border-left:3px solid ${G};">
+        <div style="font-size:8px;color:${G};text-transform:uppercase;letter-spacing:1.5px;font-weight:700;margin-bottom:8px;">What We Understand About Your Situation</div>
+        <p style="font-size:10.5px;color:#374151;margin-bottom:5px;line-height:1.55;">${e(c.contactBrief.roleInsight)}</p>
+        <p style="font-size:10px;color:#6b7280;font-style:italic;line-height:1.5;">${e(c.contactBrief.decisionStyle)}</p>
+        <div style="margin-top:9px;">
+          <div style="font-size:8px;color:#9ca3af;text-transform:uppercase;letter-spacing:1px;font-weight:600;margin-bottom:4px;">Day-to-Day Considerations</div>
+          <ul style="list-style:none;padding:0;">${painHtml}</ul>
+        </div>
+      </div>
+    </div>
+    <!-- Right: satellite map + property facts -->
+    <div style="flex:1;display:flex;flex-direction:column;gap:10px;">
+      ${img.satelliteMap ? `
+      <div style="border-radius:6px;overflow:hidden;border:1px solid #e5e7eb;flex-shrink:0;">
+        <img src="${img.satelliteMap}" alt="Satellite view" style="width:100%;height:130px;object-fit:cover;display:block;" onerror="this.parentElement.style.display='none'" />
+        <div style="padding:5px 8px;background:#f9fafb;font-size:8px;color:#9ca3af;text-align:center;">${e(propertyAddress)}</div>
+      </div>` : ""}
+      <!-- Risk Snapshot chart -->
+      <div style="background:#f9fafb;border-radius:6px;padding:12px;border:1px solid #e5e7eb;">
+        <div style="font-size:8px;color:#6b7280;text-transform:uppercase;letter-spacing:1.5px;font-weight:700;margin-bottom:10px;">Risk Snapshot</div>
+        <div style="display:flex;gap:8px;margin-bottom:10px;">
+          ${highCount > 0 ? `<div style="flex:1;background:${R}15;border:1px solid ${R}40;border-radius:6px;padding:8px;text-align:center;">
+            <div style="font-size:20px;font-weight:800;color:${R};">${highCount}</div>
+            <div style="font-size:8px;color:${R};font-weight:600;letter-spacing:0.5px;">HIGH</div>
+          </div>` : ""}
+          ${medCount > 0 ? `<div style="flex:1;background:#d9770615;border:1px solid #d9770640;border-radius:6px;padding:8px;text-align:center;">
+            <div style="font-size:20px;font-weight:800;color:#d97706;">${medCount}</div>
+            <div style="font-size:8px;color:#d97706;font-weight:600;letter-spacing:0.5px;">MED</div>
+          </div>` : ""}
+          ${lowCount > 0 ? `<div style="flex:1;background:#16a34a15;border:1px solid #16a34a40;border-radius:6px;padding:8px;text-align:center;">
+            <div style="font-size:20px;font-weight:800;color:#16a34a;">${lowCount}</div>
+            <div style="font-size:8px;color:#16a34a;font-weight:600;letter-spacing:0.5px;">LOW</div>
+          </div>` : ""}
+        </div>
+        <!-- Stacked bar -->
+        <div style="height:6px;border-radius:3px;overflow:hidden;display:flex;gap:1px;">
+          ${highCount > 0 ? `<div style="flex:${highCount};background:${R};"></div>` : ""}
+          ${medCount > 0 ? `<div style="flex:${medCount};background:#d97706;"></div>` : ""}
+          ${lowCount > 0 ? `<div style="flex:${lowCount};background:#16a34a;"></div>` : ""}
+        </div>
+      </div>
     </div>
   </div>
 
-  <!-- Property Risks -->
-  <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:${D};margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid ${R};">
-    Risk Assessment: ${e(propertyName)}
+  <!-- Risk table -->
+  <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:${D};margin-bottom:7px;padding-bottom:4px;border-bottom:1px solid ${R};">
+    Risk Assessment — ${e(propertyName)}
   </div>
-  <table style="width:100%;border-collapse:collapse;margin-bottom:18px;">
+  <table style="width:100%;border-collapse:collapse;">
     <tbody>${risksHtml}</tbody>
   </table>
 
   ${pageFooter(2)}
 </div>
 
-<!-- ═══════════════════ PAGE 3: SERVICES + WHY US + CTA ═══════════════════ -->
+<!-- ═══════════════════ PAGE 3: SERVICES + CAPABILITIES + CLOSING ═══════════════════ -->
 <div class="page" style="padding:0.5in;">
   ${pageHeader}
 
-  <!-- Recommended Services -->
-  <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:${D};margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid ${G};">
-    Recommended Services
+  <!-- Service Timeline chart -->
+  <div style="margin-bottom:18px;">
+    <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:${D};margin-bottom:10px;padding-bottom:4px;border-bottom:1px solid ${G};">
+      Service Roadmap
+    </div>
+    <div style="display:flex;gap:0;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;">
+      ${immediate.length > 0 ? `
+      <div style="flex:1;background:#fff5f5;padding:12px 14px;border-right:1px solid #e5e7eb;">
+        <div style="display:flex;align-items:center;gap:5px;margin-bottom:8px;">
+          <div style="width:8px;height:8px;border-radius:50%;background:${R};flex-shrink:0;"></div>
+          <div style="font-size:8px;font-weight:700;color:${R};letter-spacing:1px;text-transform:uppercase;">Immediate</div>
+        </div>
+        ${svcBarHtml(immediate, R)}
+      </div>` : ""}
+      ${nearTerm.length > 0 ? `
+      <div style="flex:1;background:#fffbeb;padding:12px 14px;border-right:1px solid #e5e7eb;">
+        <div style="display:flex;align-items:center;gap:5px;margin-bottom:8px;">
+          <div style="width:8px;height:8px;border-radius:50%;background:#d97706;flex-shrink:0;"></div>
+          <div style="font-size:8px;font-weight:700;color:#d97706;letter-spacing:1px;text-transform:uppercase;">Near-Term</div>
+        </div>
+        ${svcBarHtml(nearTerm, "#d97706")}
+      </div>` : ""}
+      ${preventive.length > 0 ? `
+      <div style="flex:1;background:#eff6ff;padding:12px 14px;">
+        <div style="display:flex;align-items:center;gap:5px;margin-bottom:8px;">
+          <div style="width:8px;height:8px;border-radius:50%;background:#2563eb;flex-shrink:0;"></div>
+          <div style="font-size:8px;font-weight:700;color:#2563eb;letter-spacing:1px;text-transform:uppercase;">Preventive</div>
+        </div>
+        ${svcBarHtml(preventive, "#2563eb")}
+      </div>` : ""}
+    </div>
   </div>
+
+  <!-- Service detail table -->
   <table style="width:100%;border-collapse:collapse;margin-bottom:18px;">
     <thead>
       <tr style="background:${D};color:#fff;">
-        <th style="padding:5px 8px;text-align:left;font-size:9px;text-transform:uppercase;letter-spacing:0.5px;">Service</th>
-        <th style="padding:5px 8px;text-align:left;font-size:9px;text-transform:uppercase;letter-spacing:0.5px;">Why for This Property</th>
-        <th style="padding:5px 8px;text-align:center;font-size:9px;text-transform:uppercase;letter-spacing:0.5px;">Priority</th>
+        <th style="padding:5px 8px;text-align:left;font-size:8px;text-transform:uppercase;letter-spacing:0.5px;">Service</th>
+        <th style="padding:5px 8px;text-align:left;font-size:8px;text-transform:uppercase;letter-spacing:0.5px;">Why for This Property</th>
       </tr>
     </thead>
     <tbody>${servicesHtml}</tbody>
   </table>
 
-  <!-- Why Paul Davis -->
-  <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:${D};margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid ${G};">
+  <!-- How Paul Davis supports -->
+  <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:${D};margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid ${G};">
     How Paul Davis Supports ${e(propertyName)}
   </div>
-  <div style="margin-bottom:20px;">
-    ${whyUsHtml}
-  </div>
+  <div style="margin-bottom:18px;">${whyUsHtml}</div>
 
-  <!-- Closing -->
+  <!-- Closing contact block -->
   <div style="border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;">
-    <div style="background:${D};padding:14px 20px;display:flex;align-items:center;gap:12px;">
-      <img src="${img.paulDavisLogo}" alt="Paul Davis" style="height:28px;opacity:0.9;" />
-      <div style="width:1px;height:28px;background:rgba(255,255,255,0.15);"></div>
-      <div style="color:#9ca3af;font-size:10px;">Palm Beach County &bull; Treasure Coast &bull; South Florida</div>
+    <div style="background:${D};padding:12px 18px;display:flex;align-items:center;gap:10px;">
+      <img src="${img.paulDavisLogo}" alt="Paul Davis" style="height:24px;opacity:0.92;" />
+      <div style="width:1px;height:22px;background:rgba(255,255,255,0.15);"></div>
+      <div style="color:#9ca3af;font-size:9px;">Palm Beach County &bull; Treasure Coast &bull; South Florida</div>
     </div>
-    <div style="padding:16px 20px;background:#fafafa;">
-      <p style="font-size:12px;color:#374151;margin-bottom:12px;line-height:1.6;">${e(c.callToAction)}</p>
-      ${c.nextStep ? `<p style="font-size:11px;color:#6b7280;line-height:1.5;margin-bottom:12px;">${e(c.nextStep)}</p>` : ""}
-      <div style="display:flex;gap:24px;padding-top:12px;border-top:1px solid #e5e7eb;">
-        <div>
-          <div style="font-size:9px;color:#9ca3af;text-transform:uppercase;letter-spacing:1px;margin-bottom:2px;">Phone</div>
-          <div style="font-size:12px;font-weight:600;color:${D};">(561) 478-7272</div>
-        </div>
-        <div>
-          <div style="font-size:9px;color:#9ca3af;text-transform:uppercase;letter-spacing:1px;margin-bottom:2px;">Availability</div>
-          <div style="font-size:12px;font-weight:600;color:${D};">24 / 7 &bull; 365</div>
-        </div>
-        <div>
-          <div style="font-size:9px;color:#9ca3af;text-transform:uppercase;letter-spacing:1px;margin-bottom:2px;">Response</div>
-          <div style="font-size:12px;font-weight:600;color:${D};">30-min average</div>
-        </div>
-        <div>
-          <div style="font-size:9px;color:#9ca3af;text-transform:uppercase;letter-spacing:1px;margin-bottom:2px;">Insurance</div>
-          <div style="font-size:12px;font-weight:600;color:${D};">All major carriers</div>
-        </div>
+    <div style="padding:14px 18px;background:#fafafa;">
+      <p style="font-size:11.5px;color:#374151;line-height:1.6;margin-bottom:10px;">${e(c.callToAction)}</p>
+      ${c.nextStep ? `<p style="font-size:10px;color:#6b7280;line-height:1.5;margin-bottom:10px;">${e(c.nextStep)}</p>` : ""}
+      <div style="display:flex;gap:20px;padding-top:10px;border-top:1px solid #e5e7eb;">
+        <div><div style="font-size:8px;color:#9ca3af;text-transform:uppercase;letter-spacing:1px;margin-bottom:1px;">Phone</div><div style="font-size:12px;font-weight:700;color:${D};">(561) 478-7272</div></div>
+        <div><div style="font-size:8px;color:#9ca3af;text-transform:uppercase;letter-spacing:1px;margin-bottom:1px;">Availability</div><div style="font-size:12px;font-weight:700;color:${D};">24/7 &bull; 365</div></div>
+        <div><div style="font-size:8px;color:#9ca3af;text-transform:uppercase;letter-spacing:1px;margin-bottom:1px;">Response</div><div style="font-size:12px;font-weight:700;color:${D};">~30 min avg</div></div>
+        <div><div style="font-size:8px;color:#9ca3af;text-transform:uppercase;letter-spacing:1px;margin-bottom:1px;">Insurance</div><div style="font-size:12px;font-weight:700;color:${D};">All major carriers</div></div>
       </div>
     </div>
   </div>
