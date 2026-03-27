@@ -340,6 +340,7 @@ function generateHtml(
       <!-- Prepared For -->
       <div style="flex:1.1;padding:22px;background:#f9fafb;border-radius:8px;border-top:3px solid ${G};">
         <div style="font-size:8px;color:${G};font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:14px;">Prepared For</div>
+        ${img.companyLogo ? `<div style="margin-bottom:12px;"><img src="${img.companyLogo}" alt="" style="height:40px;max-width:140px;object-fit:contain;" onerror="this.parentElement.style.display='none'" /></div>` : ""}
         <div style="font-size:22px;font-weight:800;color:${D};line-height:1.15;">${e(contactName)}</div>
         <div style="font-size:12px;color:#4b5563;margin-top:4px;">${e(contactTitle)}</div>
         ${orgName ? `<div style="font-size:11px;color:#9ca3af;margin-top:3px;">${e(orgName)}</div>` : ""}
