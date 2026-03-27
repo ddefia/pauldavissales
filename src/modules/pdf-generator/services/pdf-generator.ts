@@ -297,9 +297,18 @@ function generateHtml(
     .page { width: 8.5in; min-height: 11in; position: relative; page-break-after: always; overflow: hidden; }
     .page:last-child { page-break-after: auto; }
     @media screen { body { background: #d1d5db; } .page { max-width: 8.5in; margin: 20px auto; background: white; box-shadow: 0 4px 20px rgba(0,0,0,0.15); } }
+    @media print { #print-btn { display: none !important; } }
   </style>
 </head>
 <body>
+
+<div id="print-btn" style="position:fixed;bottom:28px;right:28px;z-index:9999;display:flex;flex-direction:column;gap:8px;align-items:flex-end;">
+  <button onclick="window.print()" style="background:#222;color:#fff;border:none;padding:12px 22px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,0.25);display:flex;align-items:center;gap:8px;font-family:inherit;">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+    Save as PDF
+  </button>
+  <div style="font-size:10px;color:#9ca3af;text-align:right;padding-right:2px;">Print → Save as PDF</div>
+</div>
 
 <!-- ═══════════════════ PAGE 1: COVER ═══════════════════ -->
 <div class="page" style="display:flex;flex-direction:column;background:#fff;">
