@@ -155,11 +155,11 @@ Return ONLY valid JSON (no markdown, no fences):
     {"name": "...", "why": "...", "priority": "..."}
   ],
   "whyUs": ["4 bullet points (1-2 sentences each). Why Paul Davis specifically for THIS prospect. Reference their role, property type, location. NOT generic marketing."],
-  "callToAction": "Specific, actionable next step. A meeting, walkthrough, or assessment request that's easy to say yes to.",
-  "nextStep": "One sentence adding urgency or value. Reference hurricane season, building age, or recent weather events."
+  "callToAction": "One calm, professional sentence — NOT a sales pitch. Something like 'We're available whenever [property name] needs us, routine or emergency.' Confident, not pushy. Like a trusted partner, not a vendor trying to close.",
+  "nextStep": "One factual sentence — a relevant data point or seasonal reality for South Florida that underscores preparedness. No urgency language, no 'act now'. Just useful context."
 }
 
-Be SPECIFIC. Reference South Florida conditions, their building's age, their role's responsibilities. Every word must be tailored to THIS prospect.`;
+Tone: This is a professional assessment left behind after a meeting — NOT a sales brochure. Every sentence should feel like it was written by a knowledgeable peer, not a salesperson. Specific, credible, useful. Reference South Florida conditions, their building's age, their role's responsibilities.`;
 
   const response = await getAnthropicClient().messages.create({
     model: "claude-haiku-4-5-20251001",
@@ -346,17 +346,16 @@ function generateHtml(
         <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;">
           ${stats.map(s => `<span style="background:#e5e7eb;padding:3px 10px;border-radius:12px;font-size:10px;color:#374151;font-weight:500;">${e(s!)}</span>`).join("")}
         </div>
-        <div style="margin-top:4px;">
-          <span style="background:${R};color:#fff;font-size:11px;font-weight:700;padding:4px 12px;border-radius:12px;">${e(c.estimatedExposure)} est. annual exposure</span>
+        <div style="margin-top:8px;font-size:10px;color:#6b7280;">
+          Est. annual exposure: <span style="font-weight:600;color:${D};">${e(c.estimatedExposure)}</span>
         </div>
         ${img.satelliteMap ? `<div style="margin-top:12px;border-radius:6px;overflow:hidden;border:1px solid #e5e7eb;"><img src="${img.satelliteMap}" alt="" style="width:100%;height:90px;object-fit:cover;display:block;" onerror="this.parentElement.style.display='none'" /></div>` : ""}
       </div>
     </div>
 
-    <!-- Tagline -->
-    <div style="text-align:center;padding:18px 24px;background:${D};border-radius:8px;">
-      <div style="color:#fff;font-size:13px;font-weight:600;margin-bottom:4px;">${e(c.headline)}</div>
-      <div style="color:#9ca3af;font-size:11px;">${e(c.subtitle)}</div>
+    <!-- Subtitle -->
+    <div style="padding:16px 24px;border-left:3px solid ${G};background:#f9fafb;border-radius:0 6px 6px 0;">
+      <div style="color:#374151;font-size:12px;line-height:1.6;">${e(c.subtitle)}</div>
     </div>
 
     <!-- Footer -->
@@ -421,18 +420,41 @@ function generateHtml(
 
   <!-- Why Paul Davis -->
   <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:${D};margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid ${G};">
-    Why Paul Davis for ${e(propertyName)}
+    How Paul Davis Supports ${e(propertyName)}
   </div>
   <div style="margin-bottom:20px;">
     ${whyUsHtml}
   </div>
 
-  <!-- CTA -->
-  <div style="background:${R};color:#fff;padding:20px 28px;border-radius:10px;text-align:center;">
-    <div style="font-size:9px;text-transform:uppercase;letter-spacing:2px;opacity:0.8;margin-bottom:6px;">Your Next Step</div>
-    <div style="font-size:15px;font-weight:700;line-height:1.3;">${e(c.callToAction)}</div>
-    ${c.nextStep ? `<div style="font-size:11px;opacity:0.9;margin-top:5px;font-style:italic;">${e(c.nextStep)}</div>` : ""}
-    <div style="margin-top:10px;"><span style="background:rgba(255,255,255,0.2);padding:4px 16px;border-radius:16px;font-size:12px;font-weight:600;">(561) 478-7272 &bull; 24/7 Emergency Response</span></div>
+  <!-- Closing -->
+  <div style="border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;">
+    <div style="background:${D};padding:14px 20px;display:flex;align-items:center;gap:12px;">
+      <img src="${img.paulDavisLogo}" alt="Paul Davis" style="height:28px;opacity:0.9;" />
+      <div style="width:1px;height:28px;background:rgba(255,255,255,0.15);"></div>
+      <div style="color:#9ca3af;font-size:10px;">Palm Beach County &bull; Treasure Coast &bull; South Florida</div>
+    </div>
+    <div style="padding:16px 20px;background:#fafafa;">
+      <p style="font-size:12px;color:#374151;margin-bottom:12px;line-height:1.6;">${e(c.callToAction)}</p>
+      ${c.nextStep ? `<p style="font-size:11px;color:#6b7280;line-height:1.5;margin-bottom:12px;">${e(c.nextStep)}</p>` : ""}
+      <div style="display:flex;gap:24px;padding-top:12px;border-top:1px solid #e5e7eb;">
+        <div>
+          <div style="font-size:9px;color:#9ca3af;text-transform:uppercase;letter-spacing:1px;margin-bottom:2px;">Phone</div>
+          <div style="font-size:12px;font-weight:600;color:${D};">(561) 478-7272</div>
+        </div>
+        <div>
+          <div style="font-size:9px;color:#9ca3af;text-transform:uppercase;letter-spacing:1px;margin-bottom:2px;">Availability</div>
+          <div style="font-size:12px;font-weight:600;color:${D};">24 / 7 &bull; 365</div>
+        </div>
+        <div>
+          <div style="font-size:9px;color:#9ca3af;text-transform:uppercase;letter-spacing:1px;margin-bottom:2px;">Response</div>
+          <div style="font-size:12px;font-weight:600;color:${D};">30-min average</div>
+        </div>
+        <div>
+          <div style="font-size:9px;color:#9ca3af;text-transform:uppercase;letter-spacing:1px;margin-bottom:2px;">Insurance</div>
+          <div style="font-size:12px;font-weight:600;color:${D};">All major carriers</div>
+        </div>
+      </div>
+    </div>
   </div>
 
   ${pageFooter(3)}
