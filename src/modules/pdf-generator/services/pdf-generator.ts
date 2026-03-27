@@ -100,7 +100,7 @@ export async function generateProspectPdf(
     property.longitude ? Number(property.longitude) : null
   );
 
-  const prompt = `You are writing a 2-page property assessment PDF for Paul Davis Restoration — a sales leave-behind for an in-person meeting. It must be DEEPLY personalized to this specific prospect and property.
+  const prompt = `You are writing a property assessment PDF for Paul Davis Restoration. This is handed IN a meeting that has already been booked — the prospect already agreed to sit down. This is NOT a pitch to earn a meeting; it's a professional leave-behind that shows you did your homework on their property before walking in. It should feel like a knowledgeable colleague prepared this specifically for them.
 
 ## Paul Davis Restoration
 - Full-service property restoration: water, fire, mold, storm damage
@@ -134,32 +134,32 @@ ${enrichment ? `## Intel from Research
 Return ONLY valid JSON (no markdown, no fences):
 
 {
-  "headline": "Compelling headline max 10 words — mention their property or company.",
-  "subtitle": "One sentence about what Paul Davis can do for THIS property specifically.",
+  "headline": "A short, specific observation about this property or their situation — not a slogan. 8 words max. Read like a finding, not an ad.",
+  "subtitle": "One grounded sentence framing the assessment — what Paul Davis looked at and why it matters for this property.",
   "contactBrief": {
-    "roleInsight": "2-3 sentences: What their specific role (${contact.title || 'their position'}) means for restoration decisions. What they care about most — budgets? tenant satisfaction? compliance? What keeps them up at night?",
-    "decisionStyle": "1-2 sentences: How they likely make vendor decisions. Do they need board approval? Are they the sole decision maker? What will convince them?",
-    "painPoints": ["3 specific pain points relevant to their role and property type. NOT generic — reference their building type, location, org type."]
+    "roleInsight": "2-3 sentences: What their role (${contact.title || 'their position'}) actually means day-to-day for property resilience decisions. What they're accountable for. Written like you understand their job.",
+    "decisionStyle": "1 sentence: How someone in their role typically manages restoration vendors — proactive contracts, reactive calls, board oversight, etc. Factual, not flattering.",
+    "painPoints": ["3 specific operational realities for someone in their role managing this property type in South Florida. These are things they already know and feel — not news to them, just showing you understand."]
   },
   "propertyRisks": [
-    {"risk": "Risk category", "severity": "High or Medium or Low", "detail": "2 sentences specific to THIS building — reference year built, location, type, flood zone, coastal exposure."},
+    {"risk": "Risk category", "severity": "High or Medium or Low", "detail": "2 sentences grounded in the actual building — year built, construction type, location, flood zone, coastal exposure. Factual, not alarming."},
     {"risk": "...", "severity": "...", "detail": "..."},
     {"risk": "...", "severity": "...", "detail": "..."},
     {"risk": "...", "severity": "...", "detail": "..."}
   ],
-  "estimatedExposure": "Conservative, BELIEVABLE annual estimate. Small condo: $5k-$15k. Mid-size: $10k-$40k. Large high-rise: $25k-$75k. Format: '$X,000 - $X,000/yr'",
+  "estimatedExposure": "Conservative annual range based on property size and type. Small condo: $5k-$15k. Mid-size: $10k-$40k. Large high-rise: $25k-$75k. Format: '$X,000–$X,000/yr'",
   "services": [
-    {"name": "Service name", "why": "One sentence — why THIS property needs this service", "priority": "Immediate or Near-Term or Preventive"},
+    {"name": "Service name", "why": "One sentence — grounded in something specific about this property or location", "priority": "Immediate or Near-Term or Preventive"},
     {"name": "...", "why": "...", "priority": "..."},
     {"name": "...", "why": "...", "priority": "..."},
     {"name": "...", "why": "...", "priority": "..."}
   ],
-  "whyUs": ["4 bullet points (1-2 sentences each). Why Paul Davis specifically for THIS prospect. Reference their role, property type, location. NOT generic marketing."],
-  "callToAction": "One calm, professional sentence — NOT a sales pitch. Something like 'We're available whenever [property name] needs us, routine or emergency.' Confident, not pushy. Like a trusted partner, not a vendor trying to close.",
-  "nextStep": "One factual sentence — a relevant data point or seasonal reality for South Florida that underscores preparedness. No urgency language, no 'act now'. Just useful context."
+  "whyUs": ["4 short points — capabilities and track record relevant to this property type and location. No superlatives. No 'best in class'. Facts and specifics only."],
+  "callToAction": "One sentence — a natural, confident statement of availability. Reads like something you'd say at the end of a good meeting. Not a close, not a pitch. Example: 'We're already familiar with properties like this across the county — reach us anytime.'",
+  "nextStep": "One factual, useful sentence about South Florida property conditions, insurance trends, or seasonal timing that's genuinely relevant to this property. Something they'd nod at, not roll their eyes at."
 }
 
-Tone: This is a professional assessment left behind after a meeting — NOT a sales brochure. Every sentence should feel like it was written by a knowledgeable peer, not a salesperson. Specific, credible, useful. Reference South Florida conditions, their building's age, their role's responsibilities.`;
+Tone: This document is handed to someone in a meeting that they already agreed to. They're engaged. Write like a prepared, knowledgeable peer — not a vendor trying to close. Every line should make them think 'they actually know what they're talking about.' Specific, grounded, zero fluff.`;
 
   const response = await getAnthropicClient().messages.create({
     model: "claude-haiku-4-5-20251001",
@@ -297,8 +297,8 @@ function generateHtml(
   <div style="background:${D};padding:28px 48px 24px;display:flex;justify-content:space-between;align-items:flex-start;">
     <img src="${img.paulDavisLogo}" alt="Paul Davis" style="height:52px;" />
     <div style="text-align:right;">
-      <div style="color:${G};font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;">Confidential Property Assessment</div>
-      <div style="color:#6b7280;font-size:10px;margin-top:3px;">${dateStr}</div>
+      <div style="color:${G};font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;">Property Assessment</div>
+      <div style="color:#6b7280;font-size:10px;margin-top:3px;">Prepared for ${e(dateStr)}</div>
     </div>
   </div>
 
@@ -379,11 +379,11 @@ function generateHtml(
 
   <!-- Contact Intel -->
   <div style="background:#faf8f3;border-radius:8px;padding:16px;border-left:3px solid ${G};margin-bottom:20px;">
-    <div style="font-size:9px;color:${G};text-transform:uppercase;letter-spacing:1.5px;font-weight:700;margin-bottom:10px;">About ${e(contactName.split(" ")[0])}'s Role</div>
+    <div style="font-size:9px;color:${G};text-transform:uppercase;letter-spacing:1.5px;font-weight:700;margin-bottom:10px;">What We Understand About Your Situation</div>
     <p style="font-size:11px;color:#374151;margin-bottom:6px;">${e(c.contactBrief.roleInsight)}</p>
     <p style="font-size:10px;color:#6b7280;font-style:italic;">${e(c.contactBrief.decisionStyle)}</p>
     <div style="margin-top:10px;">
-      <div style="font-size:9px;color:${R};text-transform:uppercase;letter-spacing:1px;font-weight:700;margin-bottom:5px;">Key Pain Points</div>
+      <div style="font-size:9px;color:#6b7280;text-transform:uppercase;letter-spacing:1px;font-weight:600;margin-bottom:5px;">Day-to-Day Considerations</div>
       <ul style="list-style:none;padding:0;">${painHtml}</ul>
     </div>
   </div>
