@@ -156,6 +156,7 @@ model Contact {
 
   validationResults ValidationResult[]
   notes             ContactNote[]
+  outreachLogs      OutreachLog[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -530,6 +531,52 @@ model GeneratedPdf {
   filePath   String
   metadata   Json?
   createdAt  DateTime @default(now())
+}
+
+// ─── Sales Tracking ──────────────────────────────────────────────────────────
+
+model WeeklyPlan {
+  id          String   @id @default(cuid())
+  weekNumber  Int      // e.g. 1, 2, 3...
+  weekStart   DateTime // Monday of the week
+  label       String   // "Week 1 Playbook" etc.
+  status      String   @default("active") // active, completed
+  // Targets
+  targetCalls      Int @default(50)
+  targetEmails     Int @default(50)
+  targetVoicemails Int @default(100)
+  targetMeetings   Int @default(5)
+  targetPdfs       Int @default(50)
+  // Actuals (updated as you go)
+  actualCalls      Int @default(0)
+  actualEmails     Int @default(0)
+  actualVoicemails Int @default(0)
+  actualMeetings   Int @default(0)
+  actualPdfs       Int @default(0)
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  outreachLogs OutreachLog[]
+
+  @@unique([weekNumber])
+}
+
+model OutreachLog {
+  id           String    @id @default(cuid())
+  weeklyPlanId String
+  weeklyPlan   WeeklyPlan @relation(fields: [weeklyPlanId], references: [id])
+  contactId    String?
+  contact      Contact?   @relation(fields: [contactId], references: [id])
+  day          String     // "Monday", "Tuesday", etc.
+  type         String     // "call", "email", "voicemail", "meeting", "pdf"
+  status       String     @default("pending") // pending, done, no_answer, left_vm, booked
+  notes        String?
+  createdAt    DateTime   @default(now())
+
+  @@index([weeklyPlanId])
+  @@index([contactId])
+  @@index([day])
 }
 
 model AuditLog {

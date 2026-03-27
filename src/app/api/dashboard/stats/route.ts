@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth-bypass";
 import prisma from "@/lib/prisma";
+import { queryOne } from "@/lib/db";
 
 export async function GET() {
   const session = await auth();
@@ -8,7 +9,7 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const [totalContacts, totalOrganizations, callList, contactsByTerritory, mapContacts] =
+  const [totalContacts, totalOrganizations, callList, contactsByTerritory, mapContacts, weeklyPlan] =
     await Promise.all([
       prisma.contact.count({ where: { isGoldenRecord: true } }),
       prisma.organization.count(),
@@ -59,6 +60,9 @@ export async function GET() {
           territory: { select: { name: true } },
         },
       }),
+
+      // Active weekly plan via direct pg (bypasses Prisma adapter schema cache)
+      queryOne(`SELECT * FROM "WeeklyPlan" WHERE status = 'active' ORDER BY "weekStart" DESC LIMIT 1`).catch(() => null),
     ]);
 
   // Build a human-readable "why" for each contact from their enrichment data
@@ -145,6 +149,26 @@ export async function GET() {
         compositeScore: c.compositeScore,
         status: c.status,
       })),
+      weeklyPlan: weeklyPlan
+        ? {
+            id: weeklyPlan.id,
+            weekNumber: weeklyPlan.weekNumber,
+            label: weeklyPlan.label,
+            status: weeklyPlan.status,
+            weekStart: weeklyPlan.weekStart,
+            targetCalls: weeklyPlan.targetCalls,
+            targetEmails: weeklyPlan.targetEmails,
+            targetVoicemails: weeklyPlan.targetVoicemails,
+            targetMeetings: weeklyPlan.targetMeetings,
+            targetPdfs: weeklyPlan.targetPdfs,
+            actualCalls: weeklyPlan.actualCalls,
+            actualEmails: weeklyPlan.actualEmails,
+            actualVoicemails: weeklyPlan.actualVoicemails,
+            actualMeetings: weeklyPlan.actualMeetings,
+            actualPdfs: weeklyPlan.actualPdfs,
+            notes: weeklyPlan.notes,
+          }
+        : null,
     },
   });
 }
