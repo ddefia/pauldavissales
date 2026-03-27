@@ -230,7 +230,7 @@ function generateHtml(
   const pageFooter = (n: number) => `
     <div style="position:absolute;bottom:0.4in;left:0.5in;right:0.5in;display:flex;justify-content:space-between;font-size:8px;color:#9ca3af;border-top:1px solid #e5e7eb;padding-top:6px;">
       <span>Paul Davis Restoration &bull; Palm Beach County &bull; Treasure Coast &bull; (561) 478-7272</span>
-      <span>Page ${n} &bull; Confidential</span>
+      <span>Page ${n} of 3 &bull; Confidential</span>
     </div>`;
 
   // Property stats row
@@ -283,87 +283,111 @@ function generateHtml(
     @page { size: letter; margin: 0; }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; color: #1f2937; line-height: 1.4; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    .page { width: 8.5in; min-height: 11in; position: relative; page-break-after: always; }
+    .page { width: 8.5in; min-height: 11in; position: relative; page-break-after: always; overflow: hidden; }
     .page:last-child { page-break-after: auto; }
     @media screen { body { background: #d1d5db; } .page { max-width: 8.5in; margin: 20px auto; background: white; box-shadow: 0 4px 20px rgba(0,0,0,0.15); } }
   </style>
 </head>
 <body>
 
-<!-- ═══════════════════ PAGE 1: COVER ═══════════════════ -->
-<div class="page" style="display:flex;flex-direction:column;">
+<!-- ═══════════════════ PAGE 1: FULL COVER ═══════════════════ -->
+<div class="page" style="display:flex;flex-direction:column;background:#fff;">
 
-  <!-- Dark header -->
-  <div style="background:${D};padding:20px 40px;display:flex;justify-content:space-between;align-items:center;">
-    <img src="${img.paulDavisLogo}" alt="Paul Davis" style="height:44px;" />
+  <!-- Top dark band: PD logo + label -->
+  <div style="background:${D};padding:28px 48px 24px;display:flex;justify-content:space-between;align-items:flex-start;">
+    <img src="${img.paulDavisLogo}" alt="Paul Davis" style="height:52px;" />
     <div style="text-align:right;">
-      <div style="color:${G};font-size:11px;font-weight:600;letter-spacing:1px;">PROPERTY ASSESSMENT</div>
-      <div style="color:#9ca3af;font-size:10px;">${dateStr}</div>
+      <div style="color:${G};font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;">Confidential Property Assessment</div>
+      <div style="color:#6b7280;font-size:10px;margin-top:3px;">${dateStr}</div>
     </div>
   </div>
 
-  <!-- Street view hero -->
+  <!-- Hero image (street view) or dark gradient fallback -->
   ${img.streetView ? `
-  <div style="position:relative;height:260px;overflow:hidden;">
-    <img src="${img.streetView}" alt="${e(propertyName)}" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.style.height='0'" />
-    <div style="position:absolute;top:12px;left:16px;background:rgba(0,0,0,0.75);color:#fff;padding:5px 12px;border-radius:4px;font-size:10px;">
-      <span style="color:${G};font-weight:700;">${e(propertyName)}</span> &bull; ${e(propertyAddress)}
+  <div style="position:relative;height:310px;overflow:hidden;">
+    <img src="${img.streetView}" alt="${e(propertyName)}" style="width:100%;height:100%;object-fit:cover;" onerror="this.src='';this.parentElement.style.background='linear-gradient(160deg,#2a2a2a 0%,#1a1a1a 100%)'" />
+    <div style="position:absolute;inset:0;background:linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.65) 100%);"></div>
+    <div style="position:absolute;bottom:24px;left:48px;right:48px;">
+      <div style="color:${G};font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;">Property</div>
+      <div style="color:#fff;font-size:26px;font-weight:800;line-height:1.15;text-shadow:0 2px 8px rgba(0,0,0,0.5);">${e(propertyName)}</div>
+      <div style="color:rgba(255,255,255,0.75);font-size:12px;margin-top:4px;">${e(propertyAddress)}</div>
     </div>
-  </div>` : ""}
+  </div>` : `
+  <div style="height:310px;background:linear-gradient(160deg,#2d2d2d 0%,#1a1a1a 100%);display:flex;flex-direction:column;justify-content:flex-end;padding:24px 48px;">
+    <div style="color:${G};font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;">Property</div>
+    <div style="color:#fff;font-size:26px;font-weight:800;line-height:1.15;">${e(propertyName)}</div>
+    <div style="color:rgba(255,255,255,0.6);font-size:12px;margin-top:4px;">${e(propertyAddress)}</div>
+  </div>`}
 
-  <!-- Main cover content -->
-  <div style="flex:1;padding:${img.streetView ? '28px' : '48px'} 40px 20px;display:flex;flex-direction:column;justify-content:space-between;">
-    <div>
-      <!-- Headline -->
-      <div style="width:50px;height:3px;background:${G};margin-bottom:16px;border-radius:2px;"></div>
-      <h1 style="font-size:30px;font-weight:800;color:${D};line-height:1.15;margin-bottom:8px;">${e(c.headline)}</h1>
-      <p style="font-size:14px;color:#6b7280;margin-bottom:24px;max-width:480px;">${e(c.subtitle)}</p>
+  <!-- Gold divider -->
+  <div style="height:4px;background:linear-gradient(to right, ${G}, #c4a265, ${G});"></div>
 
-      <!-- Two cards -->
-      <div style="display:flex;gap:16px;margin-bottom:24px;">
-        <!-- Prepared For -->
-        <div style="flex:1;background:#f9fafb;border-radius:6px;padding:16px;border-left:3px solid ${G};">
-          <div style="font-size:9px;color:#9ca3af;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px;">Prepared For</div>
-          <div style="font-size:17px;font-weight:700;color:${D};">${e(contactName)}</div>
-          <div style="font-size:11px;color:#4b5563;margin-top:2px;">${e(contactTitle)}</div>
-          ${orgName ? `<div style="font-size:11px;color:#6b7280;margin-top:2px;display:flex;align-items:center;">${companyLogoHtml}${e(orgName)}</div>` : ""}
-        </div>
-        <!-- Property -->
-        <div style="flex:1;background:#f9fafb;border-radius:6px;padding:16px;border-left:3px solid ${R};">
-          <div style="font-size:9px;color:#9ca3af;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px;">Property</div>
-          <div style="font-size:17px;font-weight:700;color:${D};">${e(propertyName)}</div>
-          <div style="font-size:11px;color:#4b5563;margin-top:2px;">${e(propertyAddress)}</div>
-          <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:8px;">${statsHtml}</div>
-          <div style="margin-top:8px;">
-            <span style="background:${R};color:#fff;font-size:10px;font-weight:700;padding:3px 10px;border-radius:10px;">${e(c.estimatedExposure)} estimated exposure</span>
-          </div>
-          ${img.satelliteMap ? `<img src="${img.satelliteMap}" alt="" style="width:100%;height:80px;object-fit:cover;border-radius:4px;margin-top:8px;border:1px solid #e5e7eb;" onerror="this.style.display='none'" />` : ""}
-        </div>
+  <!-- Lower content area -->
+  <div style="flex:1;padding:36px 48px;display:flex;flex-direction:column;justify-content:space-between;">
+
+    <!-- Prepared For + Property side by side -->
+    <div style="display:flex;gap:24px;margin-bottom:28px;">
+
+      <!-- Prepared For -->
+      <div style="flex:1;background:#f9fafb;border-radius:8px;padding:20px;border-top:3px solid ${G};">
+        <div style="font-size:9px;color:${G};font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;">Prepared For</div>
+        ${img.companyLogo ? `
+        <div style="margin-bottom:10px;">
+          <img src="${img.companyLogo}" alt="" style="height:36px;max-width:120px;object-fit:contain;border-radius:4px;" onerror="this.style.display='none'" />
+        </div>` : ""}
+        <div style="font-size:20px;font-weight:800;color:${D};line-height:1.2;">${e(contactName)}</div>
+        <div style="font-size:12px;color:#4b5563;margin-top:3px;">${e(contactTitle)}</div>
+        ${orgName ? `<div style="font-size:12px;color:#6b7280;margin-top:2px;font-weight:500;">${e(orgName)}</div>` : ""}
       </div>
 
-      <!-- Contact Intel -->
-      <div style="background:#faf8f3;border-radius:6px;padding:14px;border-left:3px solid ${G};">
-        <div style="font-size:9px;color:${G};text-transform:uppercase;letter-spacing:1.5px;font-weight:700;margin-bottom:8px;">About ${e(contactName.split(" ")[0])}'s Role</div>
-        <p style="font-size:11px;color:#374151;margin-bottom:6px;">${e(c.contactBrief.roleInsight)}</p>
-        <p style="font-size:10px;color:#6b7280;font-style:italic;">${e(c.contactBrief.decisionStyle)}</p>
-        <div style="margin-top:8px;">
-          <div style="font-size:9px;color:${R};text-transform:uppercase;letter-spacing:1px;font-weight:700;margin-bottom:4px;">Key Pain Points</div>
-          <ul style="list-style:none;padding:0;">${painHtml}</ul>
+      <!-- Property Details -->
+      <div style="flex:1;background:#f9fafb;border-radius:8px;padding:20px;border-top:3px solid ${R};">
+        <div style="font-size:9px;color:${R};font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;">Property Details</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;">
+          ${stats.map(s => `<span style="background:#e5e7eb;padding:3px 10px;border-radius:12px;font-size:10px;color:#374151;font-weight:500;">${e(s!)}</span>`).join("")}
         </div>
+        <div style="margin-top:4px;">
+          <span style="background:${R};color:#fff;font-size:11px;font-weight:700;padding:4px 12px;border-radius:12px;">${e(c.estimatedExposure)} est. annual exposure</span>
+        </div>
+        ${img.satelliteMap ? `<div style="margin-top:12px;border-radius:6px;overflow:hidden;border:1px solid #e5e7eb;"><img src="${img.satelliteMap}" alt="" style="width:100%;height:90px;object-fit:cover;display:block;" onerror="this.parentElement.style.display='none'" /></div>` : ""}
       </div>
     </div>
 
-    <!-- Bottom branding -->
-    <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-top:16px;">
-      <div style="font-size:10px;color:#9ca3af;">Paul Davis Restoration &bull; Palm Beach County &bull; Treasure Coast</div>
-      <div style="font-size:10px;color:#9ca3af;">Page 1 &bull; Confidential</div>
+    <!-- Tagline -->
+    <div style="text-align:center;padding:18px 24px;background:${D};border-radius:8px;">
+      <div style="color:#fff;font-size:13px;font-weight:600;margin-bottom:4px;">${e(c.headline)}</div>
+      <div style="color:#9ca3af;font-size:11px;">${e(c.subtitle)}</div>
+    </div>
+
+    <!-- Footer -->
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:24px;padding-top:14px;border-top:1px solid #e5e7eb;">
+      <div style="font-size:10px;color:#9ca3af;">Paul Davis Restoration &bull; Palm Beach County &bull; Treasure Coast &bull; (561) 478-7272</div>
+      <div style="font-size:10px;color:#9ca3af;">Confidential &bull; Page 1 of 3</div>
     </div>
   </div>
 </div>
 
-<!-- ═══════════════════ PAGE 2: RISKS + SERVICES + WHY US + CTA ═══════════════════ -->
+<!-- ═══════════════════ PAGE 2: CONTACT INTEL + PROPERTY ═══════════════════ -->
 <div class="page" style="padding:0.5in;">
   ${pageHeader}
+
+  <!-- Headline -->
+  <div style="margin-bottom:20px;">
+    <div style="width:40px;height:3px;background:${G};margin-bottom:12px;border-radius:2px;"></div>
+    <h1 style="font-size:24px;font-weight:800;color:${D};line-height:1.2;margin-bottom:6px;">${e(c.headline)}</h1>
+    <p style="font-size:12px;color:#6b7280;max-width:480px;">${e(c.subtitle)}</p>
+  </div>
+
+  <!-- Contact Intel -->
+  <div style="background:#faf8f3;border-radius:8px;padding:16px;border-left:3px solid ${G};margin-bottom:20px;">
+    <div style="font-size:9px;color:${G};text-transform:uppercase;letter-spacing:1.5px;font-weight:700;margin-bottom:10px;">About ${e(contactName.split(" ")[0])}'s Role</div>
+    <p style="font-size:11px;color:#374151;margin-bottom:6px;">${e(c.contactBrief.roleInsight)}</p>
+    <p style="font-size:10px;color:#6b7280;font-style:italic;">${e(c.contactBrief.decisionStyle)}</p>
+    <div style="margin-top:10px;">
+      <div style="font-size:9px;color:${R};text-transform:uppercase;letter-spacing:1px;font-weight:700;margin-bottom:5px;">Key Pain Points</div>
+      <ul style="list-style:none;padding:0;">${painHtml}</ul>
+    </div>
+  </div>
 
   <!-- Property Risks -->
   <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:${D};margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid ${R};">
@@ -372,6 +396,13 @@ function generateHtml(
   <table style="width:100%;border-collapse:collapse;margin-bottom:18px;">
     <tbody>${risksHtml}</tbody>
   </table>
+
+  ${pageFooter(2)}
+</div>
+
+<!-- ═══════════════════ PAGE 3: SERVICES + WHY US + CTA ═══════════════════ -->
+<div class="page" style="padding:0.5in;">
+  ${pageHeader}
 
   <!-- Recommended Services -->
   <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:${D};margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid ${G};">
@@ -392,19 +423,19 @@ function generateHtml(
   <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:${D};margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid ${G};">
     Why Paul Davis for ${e(propertyName)}
   </div>
-  <div style="margin-bottom:18px;">
+  <div style="margin-bottom:20px;">
     ${whyUsHtml}
   </div>
 
   <!-- CTA -->
-  <div style="background:${R};color:#fff;padding:18px 24px;border-radius:8px;text-align:center;">
-    <div style="font-size:9px;text-transform:uppercase;letter-spacing:2px;opacity:0.8;margin-bottom:4px;">Your Next Step</div>
+  <div style="background:${R};color:#fff;padding:20px 28px;border-radius:10px;text-align:center;">
+    <div style="font-size:9px;text-transform:uppercase;letter-spacing:2px;opacity:0.8;margin-bottom:6px;">Your Next Step</div>
     <div style="font-size:15px;font-weight:700;line-height:1.3;">${e(c.callToAction)}</div>
-    ${c.nextStep ? `<div style="font-size:11px;opacity:0.9;margin-top:4px;font-style:italic;">${e(c.nextStep)}</div>` : ""}
-    <div style="margin-top:8px;"><span style="background:rgba(255,255,255,0.2);padding:3px 14px;border-radius:16px;font-size:12px;font-weight:600;">(561) 478-7272 &bull; 24/7</span></div>
+    ${c.nextStep ? `<div style="font-size:11px;opacity:0.9;margin-top:5px;font-style:italic;">${e(c.nextStep)}</div>` : ""}
+    <div style="margin-top:10px;"><span style="background:rgba(255,255,255,0.2);padding:4px 16px;border-radius:16px;font-size:12px;font-weight:600;">(561) 478-7272 &bull; 24/7 Emergency Response</span></div>
   </div>
 
-  ${pageFooter(2)}
+  ${pageFooter(3)}
 </div>
 
 </body>
