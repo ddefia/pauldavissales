@@ -87,8 +87,11 @@ export async function GET() {
 
   deduped.sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
 
+  const oneWeekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+  const recent = deduped.filter((item) => new Date(item.publishedAt).getTime() >= oneWeekAgo);
+
   return NextResponse.json({
-    data: deduped.slice(0, 8),
+    data: recent.slice(0, 8),
     fetchedAt: new Date().toISOString(),
   });
 }
