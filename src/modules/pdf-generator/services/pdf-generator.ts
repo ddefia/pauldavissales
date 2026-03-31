@@ -519,6 +519,11 @@ function generateHtml(
   ${pageFooter(3)}
 </div>
 
+<!-- Disclaimer -->
+<div style="padding:12px 48px 16px;background:#fff;">
+  <p style="font-size:7.5px;color:#9ca3af;line-height:1.6;text-align:center;">This document is prepared for informational and marketing purposes only and does not constitute a legal contract, insurance policy, engineering report, or guarantee of any kind. All estimates, projections, risk assessments, and figures contained herein are approximations based on available data and are subject to change. Paul Davis Restoration makes no warranties, express or implied, regarding the accuracy or completeness of the information presented. This assessment should not be relied upon for legal, financial, or insurance purposes.</p>
+</div>
+
 </body>
 </html>`;
 }
