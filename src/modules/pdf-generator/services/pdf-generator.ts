@@ -137,9 +137,9 @@ Return ONLY valid JSON (no markdown, no fences):
   "headline": "A short, specific observation about this property or their situation — not a slogan. 8 words max. Read like a finding, not an ad.",
   "subtitle": "One grounded sentence framing the assessment — what Paul Davis looked at and why it matters for this property.",
   "contactBrief": {
-    "roleInsight": "2-3 sentences: What their role (${contact.title || 'their position'}) actually means day-to-day for property resilience decisions. What they're accountable for. Written like you understand their job.",
-    "decisionStyle": "1 sentence: How someone in their role typically manages restoration vendors — proactive contracts, reactive calls, board oversight, etc. Factual, not flattering.",
-    "painPoints": ["3 specific operational realities for someone in their role managing this property type in South Florida. These are things they already know and feel — not news to them, just showing you understand."]
+    "roleInsight": "1 sentence: A specific observation about this property's risk profile or location — something grounded in the building, not about their role. Show you've done your homework on the property.",
+    "decisionStyle": "1 sentence: One operational reality specific to this property type and South Florida location that shapes restoration decisions. Factual, not flattering.",
+    "painPoints": ["2-3 specific operational realities for managing this property type in South Florida coastal conditions. Focus on the property, not the person — what properties like this face, not what the reader needs to do."]
   },
   "propertyRisks": [
     {"risk": "Risk category", "severity": "High or Medium or Low", "detail": "2 sentences grounded in the actual building — year built, construction type, location, flood zone, coastal exposure. Factual, not alarming."},
@@ -528,12 +528,12 @@ function generateHtml(
     </div>
   </div>
 
-  ${pageFooter(3)}
-</div>
+  <!-- Disclaimer -->
+  <div style="padding:10px 0 0;border-top:1px solid #e5e7eb;margin-top:12px;">
+    <p style="font-size:7px;color:#9ca3af;line-height:1.6;text-align:center;">For informational and marketing purposes only. Not a legal contract, insurance policy, or engineering report. All estimates and figures are approximations subject to change. Not for legal, financial, or insurance use.</p>
+  </div>
 
-<!-- Disclaimer -->
-<div style="padding:12px 48px 16px;background:#fff;">
-  <p style="font-size:7.5px;color:#9ca3af;line-height:1.6;text-align:center;">This document is prepared for informational and marketing purposes only and does not constitute a legal contract, insurance policy, engineering report, or guarantee of any kind. All estimates, projections, risk assessments, and figures contained herein are approximations based on available data and are subject to change. Paul Davis Restoration makes no warranties, express or implied, regarding the accuracy or completeness of the information presented. This assessment should not be relied upon for legal, financial, or insurance purposes.</p>
+  ${pageFooter(3)}
 </div>
 
 </body>
