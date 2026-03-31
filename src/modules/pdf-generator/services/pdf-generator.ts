@@ -342,38 +342,36 @@ function generateHtml(
   <!-- Gold bar -->
   <div style="height:3px;background:linear-gradient(to right,${G},#d4b47a,${G});flex-shrink:0;"></div>
 
-  <!-- Lower: Prepared For + Property stats -->
+  <!-- Lower section -->
   <div style="flex:1;padding:32px 48px;display:flex;flex-direction:column;justify-content:space-between;">
-    <div style="display:flex;gap:28px;margin-bottom:24px;">
 
-      <!-- Prepared For -->
-      <div style="flex:1.1;padding:22px;background:#f9fafb;border-radius:8px;border-top:3px solid ${G};">
-        <div style="font-size:8px;color:${G};font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:14px;">Prepared For</div>
-        ${img.companyLogo ? `<div style="margin-bottom:12px;"><img src="${img.companyLogo}" alt="" style="height:40px;max-width:140px;object-fit:contain;" onerror="this.parentElement.style.display='none'" /></div>` : ""}
-        <div style="font-size:22px;font-weight:800;color:${D};line-height:1.15;">${e(contactName)}</div>
-        <div style="font-size:12px;color:#4b5563;margin-top:4px;">${e(contactTitle)}</div>
-        ${orgName ? `<div style="font-size:11px;color:#9ca3af;margin-top:3px;">${e(orgName)}</div>` : ""}
-      </div>
-
-      <!-- Property stats -->
-      <div style="flex:1;padding:22px;background:#f9fafb;border-radius:8px;border-top:3px solid ${D};">
-        <div style="font-size:8px;color:#6b7280;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:16px;">Property at a Glance</div>
-        <table style="width:100%;border-collapse:collapse;">
-          ${propertyType ? `<tr><td style="padding:6px 0;font-size:10px;color:#6b7280;border-bottom:1px solid #e5e7eb;">Type</td><td style="padding:6px 0;font-size:10px;font-weight:600;color:${D};text-align:right;border-bottom:1px solid #e5e7eb;text-transform:capitalize;">${e(propertyType.replace(/_/g, " "))}</td></tr>` : ""}
-          ${unitCount ? `<tr><td style="padding:6px 0;font-size:10px;color:#6b7280;border-bottom:1px solid #e5e7eb;">Units</td><td style="padding:6px 0;font-size:10px;font-weight:600;color:${D};text-align:right;border-bottom:1px solid #e5e7eb;">${e(String(unitCount))}</td></tr>` : ""}
-          ${floors ? `<tr><td style="padding:6px 0;font-size:10px;color:#6b7280;border-bottom:1px solid #e5e7eb;">Floors</td><td style="padding:6px 0;font-size:10px;font-weight:600;color:${D};text-align:right;border-bottom:1px solid #e5e7eb;">${e(String(floors))}</td></tr>` : ""}
-          ${yearBuilt ? `<tr><td style="padding:6px 0;font-size:10px;color:#6b7280;">Year Built</td><td style="padding:6px 0;font-size:10px;font-weight:600;color:${D};text-align:right;">${e(String(yearBuilt))}</td></tr>` : ""}
-        </table>
+    <!-- Prepared For row -->
+    <div style="display:flex;align-items:center;gap:16px;margin-bottom:8px;">
+      ${img.companyLogo ? `<img src="${img.companyLogo}" alt="" style="height:36px;max-width:120px;object-fit:contain;" onerror="this.style.display='none'" />` : ""}
+      <div>
+        <div style="font-size:8px;color:${G};font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;">Prepared For</div>
+        <div style="font-size:16px;font-weight:700;color:${D};line-height:1.2;">${e(contactName)}</div>
+        <div style="font-size:11px;color:#4b5563;margin-top:2px;">${e(contactTitle)}${orgName ? ` &bull; ${e(orgName)}` : ""}</div>
       </div>
     </div>
 
-    <!-- Subtitle statement -->
-    <div style="padding:14px 20px;border-left:3px solid ${G};background:#faf8f3;border-radius:0 6px 6px 0;">
-      <div style="color:#374151;font-size:11px;line-height:1.65;">${e(c.subtitle)}</div>
+    <!-- Central statement -->
+    <div style="text-align:center;padding:28px 24px;">
+      <div style="font-size:32px;font-weight:800;color:${D};line-height:1.2;margin-bottom:12px;">Property Risk<br/>Assessment</div>
+      <div style="width:60px;height:3px;background:${G};margin:0 auto 16px;border-radius:2px;"></div>
+      <div style="font-size:11px;color:#6b7280;line-height:1.7;max-width:460px;margin:0 auto;">${e(c.subtitle)}</div>
+    </div>
+
+    <!-- Property details bar -->
+    <div style="display:flex;justify-content:center;gap:24px;padding:12px 0;border-top:1px solid #e5e7eb;border-bottom:1px solid #e5e7eb;margin-bottom:16px;">
+      ${propertyType ? `<div style="text-align:center;"><div style="font-size:8px;color:#9ca3af;text-transform:uppercase;letter-spacing:1px;margin-bottom:2px;">Type</div><div style="font-size:11px;font-weight:600;color:${D};text-transform:capitalize;">${e(propertyType.replace(/_/g, " "))}</div></div>` : ""}
+      ${unitCount ? `<div style="text-align:center;"><div style="font-size:8px;color:#9ca3af;text-transform:uppercase;letter-spacing:1px;margin-bottom:2px;">Units</div><div style="font-size:11px;font-weight:600;color:${D};">${e(String(unitCount))}</div></div>` : ""}
+      ${floors ? `<div style="text-align:center;"><div style="font-size:8px;color:#9ca3af;text-transform:uppercase;letter-spacing:1px;margin-bottom:2px;">Floors</div><div style="font-size:11px;font-weight:600;color:${D};">${e(String(floors))}</div></div>` : ""}
+      ${yearBuilt ? `<div style="text-align:center;"><div style="font-size:8px;color:#9ca3af;text-transform:uppercase;letter-spacing:1px;margin-bottom:2px;">Built</div><div style="font-size:11px;font-weight:600;color:${D};">${e(String(yearBuilt))}</div></div>` : ""}
     </div>
 
     <!-- Cover footer -->
-    <div style="display:flex;justify-content:space-between;margin-top:20px;padding-top:12px;border-top:1px solid #e5e7eb;">
+    <div style="display:flex;justify-content:space-between;padding-top:4px;">
       <div style="font-size:9px;color:#9ca3af;">Paul Davis Restoration &bull; Palm Beach &bull; Treasure Coast &bull; (561) 478-7272</div>
       <div style="font-size:9px;color:#9ca3af;">Page 1 of 3</div>
     </div>
