@@ -355,12 +355,15 @@ function generateHtml(
         ${orgName ? `<div style="font-size:11px;color:#9ca3af;margin-top:3px;">${e(orgName)}</div>` : ""}
       </div>
 
-      <!-- Property stats — no map here -->
+      <!-- Property stats -->
       <div style="flex:1;padding:22px;background:#f9fafb;border-radius:8px;border-top:3px solid ${D};">
-        <div style="font-size:8px;color:#6b7280;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:14px;">Property at a Glance</div>
-        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;">
-          ${stats.map(s => `<span style="background:#e5e7eb;padding:3px 10px;border-radius:10px;font-size:10px;color:#374151;font-weight:500;">${e(s!)}</span>`).join("")}
-        </div>
+        <div style="font-size:8px;color:#6b7280;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:16px;">Property at a Glance</div>
+        <table style="width:100%;border-collapse:collapse;">
+          ${propertyType ? `<tr><td style="padding:6px 0;font-size:10px;color:#6b7280;border-bottom:1px solid #e5e7eb;">Type</td><td style="padding:6px 0;font-size:10px;font-weight:600;color:${D};text-align:right;border-bottom:1px solid #e5e7eb;text-transform:capitalize;">${e(propertyType.replace(/_/g, " "))}</td></tr>` : ""}
+          ${unitCount ? `<tr><td style="padding:6px 0;font-size:10px;color:#6b7280;border-bottom:1px solid #e5e7eb;">Units</td><td style="padding:6px 0;font-size:10px;font-weight:600;color:${D};text-align:right;border-bottom:1px solid #e5e7eb;">${e(String(unitCount))}</td></tr>` : ""}
+          ${floors ? `<tr><td style="padding:6px 0;font-size:10px;color:#6b7280;border-bottom:1px solid #e5e7eb;">Floors</td><td style="padding:6px 0;font-size:10px;font-weight:600;color:${D};text-align:right;border-bottom:1px solid #e5e7eb;">${e(String(floors))}</td></tr>` : ""}
+          ${yearBuilt ? `<tr><td style="padding:6px 0;font-size:10px;color:#6b7280;">Year Built</td><td style="padding:6px 0;font-size:10px;font-weight:600;color:${D};text-align:right;">${e(String(yearBuilt))}</td></tr>` : ""}
+        </table>
       </div>
     </div>
 
