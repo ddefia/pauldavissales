@@ -361,9 +361,6 @@ function generateHtml(
         <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;">
           ${stats.map(s => `<span style="background:#e5e7eb;padding:3px 10px;border-radius:10px;font-size:10px;color:#374151;font-weight:500;">${e(s!)}</span>`).join("")}
         </div>
-        <div style="font-size:10px;color:#6b7280;margin-top:4px;">
-          Est. annual exposure: <span style="font-weight:700;color:${D};">${e(c.estimatedExposure)}</span>
-        </div>
       </div>
     </div>
 
