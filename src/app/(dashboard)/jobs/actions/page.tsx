@@ -184,6 +184,7 @@ function buildPrintHtml(groups: JobGroup[], pmLabel: string, status: string): st
   const esc = (s: string) =>
     s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   const statusLabel = status === "open" ? "Open items" : status === "done" ? "Completed items" : "All items";
+  const totalItems = groups.reduce((s, g) => s + g.actionItems.length, 0);
   const date = new Date().toLocaleDateString("en-US", {
     month: "long",
     day: "numeric",
@@ -203,7 +204,7 @@ function buildPrintHtml(groups: JobGroup[], pmLabel: string, status: string): st
             .map(
               (i) =>
                 `<li class="${i.status === "done" ? "done" : ""}"><span class="box">${
-                  i.status === "done" ? "✓" : "☐"
+                  i.status === "done" ? "&#10003;" : "&#9744;"
                 }</span>${esc(i.text)}</li>`
             )
             .join("")}
@@ -215,26 +216,45 @@ function buildPrintHtml(groups: JobGroup[], pmLabel: string, status: string): st
   return `<!doctype html><html><head><meta charset="utf-8"><title>Action Items — ${esc(pmLabel)}</title>
   <style>
     * { box-sizing: border-box; }
-    body { font-family: -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; color: #1a1a1a; margin: 40px; }
-    .brand { color: #F26522; font-weight: 700; letter-spacing: 3px; font-size: 13px; }
-    h1 { font-size: 22px; margin: 6px 0 2px; }
+    html, body { margin: 0; padding: 0; }
+    body { font-family: -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; color: #1a1a1a; }
+    .topbar { background: #111111; color: #fff; padding: 20px 40px; display: flex; align-items: center; justify-content: space-between; }
+    .brandwrap { display: flex; align-items: center; gap: 12px; }
+    .pd { width: 38px; height: 38px; border-radius: 8px; background: #F26522; color: #fff; font-weight: 800; font-size: 15px; display: flex; align-items: center; justify-content: center; letter-spacing: -1px; }
+    .wordmark { font-weight: 700; font-size: 15px; letter-spacing: 2px; }
+    .tag { font-size: 8px; letter-spacing: 4px; color: #9a9a9a; margin-top: 3px; }
+    .doclabel { font-size: 11px; letter-spacing: 3px; color: #F26522; font-weight: 700; }
+    .content { padding: 28px 40px 0; }
+    h1 { font-size: 22px; margin: 0 0 2px; }
     .sub { color: #888; font-size: 12px; margin-bottom: 24px; }
-    .job { margin-bottom: 18px; page-break-inside: avoid; }
-    .job-head { border-bottom: 1px solid #eee; padding-bottom: 4px; margin-bottom: 6px; }
-    .cust { font-weight: 600; font-size: 14px; }
-    .meta { color: #999; font-size: 11px; margin-left: 8px; }
+    .job { margin: 0 0 16px; padding-left: 12px; border-left: 3px solid #F26522; page-break-inside: avoid; }
+    .job-head { margin-bottom: 6px; }
+    .cust { font-weight: 700; font-size: 14px; }
+    .meta { color: #999; font-size: 11px; margin-left: 8px; font-weight: 500; }
     ul { list-style: none; padding: 0; margin: 0; }
     li { font-size: 13px; padding: 3px 0; }
     li.done { color: #999; text-decoration: line-through; }
-    .box { display: inline-block; width: 16px; color: #F26522; }
-    .footer { margin-top: 32px; border-top: 1px solid #eee; padding-top: 10px; color: #aaa; font-size: 10px; }
-    @page { margin: 1.5cm; }
+    .box { display: inline-block; width: 18px; color: #F26522; font-weight: 700; }
+    .empty { color: #999; padding: 12px 0; }
+    .footer { margin: 32px 40px 0; border-top: 1px solid #eee; padding: 10px 0 24px; color: #aaa; font-size: 10px; }
+    @page { margin: 0; }
   </style></head>
   <body>
-    <div class="brand">PAUL DAVIS</div>
-    <h1>Action Items — ${esc(pmLabel)}</h1>
-    <div class="sub">${statusLabel} · Generated ${date}</div>
-    ${body || "<p>No action items.</p>"}
-    <div class="footer">Internal accountability record · Paul Davis Restoration</div>
+    <div class="topbar">
+      <div class="brandwrap">
+        <div class="pd">PD</div>
+        <div>
+          <div class="wordmark">PAUL DAVIS</div>
+          <div class="tag">RESTORATION</div>
+        </div>
+      </div>
+      <div class="doclabel">ACTION ITEMS</div>
+    </div>
+    <div class="content">
+      <h1>${esc(pmLabel)}</h1>
+      <div class="sub">${statusLabel} · ${totalItems} item${totalItems === 1 ? "" : "s"} · Generated ${date}</div>
+      ${body || "<p class='empty'>No action items.</p>"}
+    </div>
+    <div class="footer">Internal accountability record · Paul Davis Restoration · Confidential</div>
   </body></html>`;
 }
