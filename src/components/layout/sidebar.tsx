@@ -16,12 +16,14 @@ import {
   Shield,
   Zap,
   MapPin,
+  Briefcase,
   ChevronDown,
   ChevronRight,
 } from "lucide-react";
 
 const mainNav = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+  { name: "Jobs Review", href: "/jobs", icon: Briefcase },
   { name: "Contacts", href: "/contacts", icon: Users },
   { name: "Properties", href: "/properties", icon: Building2 },
   { name: "Map", href: "/map", icon: MapPin },
