@@ -140,7 +140,7 @@ export default function ActionTasksPage() {
                     href={g.rmsUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-gray-300 hover:text-[#C4A265]"
+                    className="text-gray-300 hover:text-[#F26522]"
                     title="Open in RMS"
                   >
                     <ExternalLink className="h-4 w-4" />
@@ -155,7 +155,7 @@ export default function ActionTasksPage() {
                       className={`mt-0.5 h-4 w-4 rounded border flex items-center justify-center shrink-0 ${
                         item.status === "done"
                           ? "bg-emerald-500 border-emerald-500"
-                          : "border-gray-300 hover:border-[#C4A265]"
+                          : "border-gray-300 hover:border-[#F26522]"
                       }`}
                     >
                       {item.status === "done" && <Check className="h-3 w-3 text-white" />}
@@ -216,7 +216,7 @@ function buildPrintHtml(groups: JobGroup[], pmLabel: string, status: string): st
   <style>
     * { box-sizing: border-box; }
     body { font-family: -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; color: #1a1a1a; margin: 40px; }
-    .brand { color: #C4A265; font-weight: 700; letter-spacing: 3px; font-size: 13px; }
+    .brand { color: #F26522; font-weight: 700; letter-spacing: 3px; font-size: 13px; }
     h1 { font-size: 22px; margin: 6px 0 2px; }
     .sub { color: #888; font-size: 12px; margin-bottom: 24px; }
     .job { margin-bottom: 18px; page-break-inside: avoid; }
@@ -226,7 +226,7 @@ function buildPrintHtml(groups: JobGroup[], pmLabel: string, status: string): st
     ul { list-style: none; padding: 0; margin: 0; }
     li { font-size: 13px; padding: 3px 0; }
     li.done { color: #999; text-decoration: line-through; }
-    .box { display: inline-block; width: 16px; color: #C4A265; }
+    .box { display: inline-block; width: 16px; color: #F26522; }
     .footer { margin-top: 32px; border-top: 1px solid #eee; padding-top: 10px; color: #aaa; font-size: 10px; }
     @page { margin: 1.5cm; }
   </style></head>

@@ -135,7 +135,7 @@ export default function OpenJobsPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search customer, job #, PM"
-            className="w-64 rounded-lg border border-gray-200 bg-white pl-8 pr-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-[#C4A265]"
+            className="w-64 rounded-lg border border-gray-200 bg-white pl-8 pr-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-[#F26522]"
           />
         </div>
       </div>
@@ -198,7 +198,7 @@ function FilterSelect({
     <select
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs text-gray-700 focus:outline-none focus:ring-1 focus:ring-[#C4A265]"
+      className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs text-gray-700 focus:outline-none focus:ring-1 focus:ring-[#F26522]"
     >
       <option value="">All {label}s</option>
       {options.map((o) => (
@@ -348,7 +348,7 @@ function JobRow({
                 onChange={(e) => setNewAction(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && addAction()}
                 placeholder="New action item…"
-                className="flex-1 min-w-0 rounded border border-gray-200 px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-[#C4A265]"
+                className="flex-1 min-w-0 rounded border border-gray-200 px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-[#F26522]"
               />
               <button onClick={addAction} className="text-emerald-600 hover:bg-emerald-50 rounded p-1">
                 <Check className="h-3.5 w-3.5" />
@@ -368,7 +368,7 @@ function JobRow({
               <button
                 onClick={onAddToggle}
                 title="Add action item"
-                className="shrink-0 text-[#C4A265] hover:bg-[#C4A265]/10 rounded p-0.5"
+                className="shrink-0 text-[#F26522] hover:bg-[#F26522]/10 rounded p-0.5"
               >
                 <Plus className="h-3.5 w-3.5" />
               </button>
@@ -384,7 +384,7 @@ function JobRow({
               target="_blank"
               rel="noopener noreferrer"
               title="Open in RMS"
-              className="text-gray-300 hover:text-[#C4A265] p-1"
+              className="text-gray-300 hover:text-[#F26522] p-1"
             >
               <ExternalLink className="h-3.5 w-3.5" />
             </a>
@@ -434,7 +434,7 @@ function JobDetail({ job, onChanged }: { job: Job; onChanged: () => void }) {
   const [saving, setSaving] = useState(false);
 
   const inputCls =
-    "w-full rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-[#C4A265]";
+    "w-full rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-[#F26522]";
 
   const saveCommitments = async () => {
     setSaving(true);
@@ -457,7 +457,7 @@ function JobDetail({ job, onChanged }: { job: Job; onChanged: () => void }) {
       {/* Commitments */}
       <div className="space-y-3">
         <h3 className="text-xs font-semibold text-gray-700 flex items-center gap-1.5">
-          <Lock className="h-3 w-3 text-[#C4A265]" /> Accountability commitments
+          <Lock className="h-3 w-3 text-[#F26522]" /> Accountability commitments
         </h3>
         <Field label="Committed estimate (baseline)">
           <input
@@ -640,7 +640,7 @@ function ActionItemsEditor({ job, onChanged }: { job: Job; onChanged: () => void
               className={`mt-0.5 h-4 w-4 rounded border flex items-center justify-center shrink-0 ${
                 item.status === "done"
                   ? "bg-emerald-500 border-emerald-500"
-                  : "border-gray-300 hover:border-[#C4A265]"
+                  : "border-gray-300 hover:border-[#F26522]"
               }`}
             >
               {item.status === "done" && <Check className="h-3 w-3 text-white" />}
@@ -663,9 +663,9 @@ function ActionItemsEditor({ job, onChanged }: { job: Job; onChanged: () => void
           onChange={(e) => setText(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && add()}
           placeholder="Add an action item…"
-          className="flex-1 rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-[#C4A265]"
+          className="flex-1 rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-[#F26522]"
         />
-        <button onClick={add} className="text-[#C4A265] hover:bg-[#C4A265]/10 rounded-lg px-2">
+        <button onClick={add} className="text-[#F26522] hover:bg-[#F26522]/10 rounded-lg px-2">
           <Plus className="h-4 w-4" />
         </button>
       </div>

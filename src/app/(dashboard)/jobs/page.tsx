@@ -54,8 +54,8 @@ export default function JobsDashboardPage() {
   if (!data || data.openCount === 0) {
     return (
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-12 text-center">
-        <div className="w-12 h-12 rounded-xl bg-[#C4A265]/10 flex items-center justify-center mx-auto mb-4">
-          <Upload className="h-6 w-6 text-[#C4A265]" />
+        <div className="w-12 h-12 rounded-xl bg-[#F26522]/10 flex items-center justify-center mx-auto mb-4">
+          <Upload className="h-6 w-6 text-[#F26522]" />
         </div>
         <h2 className="text-base font-semibold text-gray-800">No open jobs yet</h2>
         <p className="text-sm text-gray-400 mt-1 max-w-md mx-auto">
@@ -64,7 +64,7 @@ export default function JobsDashboardPage() {
         </p>
         <Link
           href="/jobs/settings"
-          className="inline-flex items-center gap-2 mt-5 text-xs font-semibold text-white bg-[#222] hover:bg-[#333] rounded-lg px-4 py-2.5 transition-colors"
+          className="inline-flex items-center gap-2 mt-5 text-xs font-semibold text-white bg-[#F26522] hover:bg-[#d9551a] rounded-lg px-4 py-2.5 transition-colors shadow-sm shadow-[#F26522]/30"
         >
           <Upload className="h-3.5 w-3.5" /> Upload RMS export
         </Link>
@@ -73,6 +73,7 @@ export default function JobsDashboardPage() {
   }
 
   const maxCash = Math.max(1, ...data.cashFlow.map((c) => c.amount));
+  const cashTotal = data.cashFlow.reduce((s, c) => s + c.amount, 0);
   const maxStatus = Math.max(1, ...data.byStatus.map((s) => s.count));
   const alertCount = data.alerts.pastDue.length + data.alerts.drift.length;
 
@@ -110,12 +111,22 @@ export default function JobsDashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
         {/* Cash-flow forecast — headline */}
         <div className="lg:col-span-3 bg-white rounded-2xl border border-gray-100 shadow-sm">
-          <div className="px-5 pt-4 pb-3 border-b border-gray-50 flex items-center gap-2">
-            <Wallet className="h-4 w-4 text-[#C4A265]" />
-            <h2 className="text-sm font-semibold text-gray-800">Cash-flow forecast</h2>
-            <span className="text-[10px] text-gray-300 font-medium">
-              from billing forecasts, by month
-            </span>
+          <div className="px-5 pt-4 pb-3 border-b border-gray-50 flex items-end justify-between">
+            <div className="flex items-center gap-2">
+              <Wallet className="h-4 w-4 text-[#F26522]" />
+              <h2 className="text-sm font-semibold text-gray-800">Cash-flow forecast</h2>
+              <span className="text-[10px] text-gray-300 font-medium">
+                forecast billing, by month
+              </span>
+            </div>
+            {data.cashFlow.length > 0 && (
+              <div className="text-right leading-none">
+                <div className="text-lg font-bold text-gray-900 tabular-nums">
+                  {fmtCurrency(cashTotal, true)}
+                </div>
+                <div className="text-[10px] text-gray-400">forecast total</div>
+              </div>
+            )}
           </div>
           <div className="p-5">
             {data.cashFlow.length === 0 ? (
@@ -132,7 +143,7 @@ export default function JobsDashboardPage() {
                     </span>
                     <div className="w-full flex items-end justify-center h-full">
                       <div
-                        className="w-full max-w-[56px] bg-gradient-to-t from-[#C4A265] to-[#d8bd8a] rounded-t-md transition-all"
+                        className="w-full max-w-[56px] bg-gradient-to-t from-[#F26522] to-[#FB8B4C] rounded-t-md transition-all"
                         style={{ height: `${Math.max(4, (c.amount / maxCash) * 100)}%` }}
                       />
                     </div>
@@ -147,7 +158,7 @@ export default function JobsDashboardPage() {
         {/* Jobs by status */}
         <div className="lg:col-span-2 bg-white rounded-2xl border border-gray-100 shadow-sm">
           <div className="px-5 pt-4 pb-3 border-b border-gray-50 flex items-center gap-2">
-            <Briefcase className="h-4 w-4 text-[#C4A265]" />
+            <Briefcase className="h-4 w-4 text-[#F26522]" />
             <h2 className="text-sm font-semibold text-gray-800"># of jobs by status</h2>
           </div>
           <div className="p-5 space-y-2.5">
@@ -209,7 +220,7 @@ export default function JobsDashboardPage() {
       <div className="flex justify-end">
         <Link
           href="/jobs/open"
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#C4A265] hover:underline"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#F26522] hover:underline"
         >
           Go to Open Jobs <ArrowRight className="h-3.5 w-3.5" />
         </Link>
@@ -232,12 +243,14 @@ function StatCard({
   tint: string;
 }) {
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
-      <div className="flex items-center gap-2 text-gray-400 mb-2">
-        <Icon className="h-3.5 w-3.5" />
-        <span className="text-[11px] font-medium uppercase tracking-wide">{label}</span>
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 transition-shadow hover:shadow-md">
+      <div className="flex items-center gap-2 mb-3">
+        <div className="h-7 w-7 rounded-lg bg-[#F26522]/10 flex items-center justify-center shrink-0">
+          <Icon className="h-3.5 w-3.5 text-[#F26522]" />
+        </div>
+        <span className="text-[11px] font-medium uppercase tracking-wide text-gray-400">{label}</span>
       </div>
-      <div className={`text-xl font-bold tabular-nums ${tint}`}>{value}</div>
+      <div className={`text-2xl font-bold tabular-nums ${tint}`}>{value}</div>
       {sub && <div className="text-[11px] text-gray-400 mt-0.5 tabular-nums">{sub}</div>}
     </div>
   );

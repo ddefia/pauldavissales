@@ -85,12 +85,12 @@ function UploadCard() {
       <div
         {...getRootProps()}
         className={`flex flex-col items-center justify-center rounded-xl border-2 border-dashed p-8 cursor-pointer transition-colors ${
-          isDragActive ? "border-[#C4A265] bg-[#C4A265]/5" : "border-gray-200 hover:border-gray-300"
+          isDragActive ? "border-[#F26522] bg-[#F26522]/5" : "border-gray-200 hover:border-gray-300"
         }`}
       >
         <input {...getInputProps()} />
         {loading ? (
-          <Loader2 className="h-9 w-9 animate-spin text-[#C4A265]" />
+          <Loader2 className="h-9 w-9 animate-spin text-[#F26522]" />
         ) : (
           <>
             <FileSpreadsheet className="h-9 w-9 text-gray-300 mb-2" />
@@ -234,9 +234,9 @@ function StatusListCard() {
               onChange={(e) => setNewValue(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && add()}
               placeholder="Add a status…"
-              className="flex-1 rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-[#C4A265]"
+              className="flex-1 rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-[#F26522]"
             />
-            <button onClick={add} className="text-[#C4A265] hover:bg-[#C4A265]/10 rounded-lg px-2">
+            <button onClick={add} className="text-[#F26522] hover:bg-[#F26522]/10 rounded-lg px-2">
               <Plus className="h-4 w-4" />
             </button>
           </div>

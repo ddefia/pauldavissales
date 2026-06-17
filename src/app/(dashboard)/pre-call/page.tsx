@@ -522,7 +522,7 @@ export default function PreCallReportPage() {
           <CardContent className="p-6">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-[#1a1a1a] flex items-center justify-center">
-                <Loader2 className="h-5 w-5 animate-spin text-[#C4A265]" />
+                <Loader2 className="h-5 w-5 animate-spin text-[#F26522]" />
               </div>
               <div>
                 <p className="font-semibold text-[#1a1a1a]">Generating Pre-Call Report</p>
@@ -588,7 +588,7 @@ export default function PreCallReportPage() {
                 : "Import contacts first, then generate reports here."}
             </p>
             {!searchQuery && (
-              <Link href="/imports" className="text-gray-600 hover:text-[#C4A265] hover:underline text-sm mt-3">
+              <Link href="/imports" className="text-gray-600 hover:text-[#F26522] hover:underline text-sm mt-3">
                 Go to Imports
               </Link>
             )}
@@ -634,7 +634,7 @@ export default function PreCallReportPage() {
                       {/* Info */}
                       <div className="min-w-0">
                         <div className="flex items-center gap-2">
-                          <Link href={`/contacts/${contact.id}`} className="font-medium hover:text-[#C4A265] hover:underline">
+                          <Link href={`/contacts/${contact.id}`} className="font-medium hover:text-[#F26522] hover:underline">
                             {contact.fullName}
                           </Link>
                           {hasReport && (

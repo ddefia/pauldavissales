@@ -72,7 +72,7 @@ export default function OrganizationsPage() {
                 orgs.map((org) => (
                   <TableRow key={org.id} className="hover:bg-gray-50">
                     <TableCell>
-                      <Link href={`/organizations/${org.id}`} className="font-medium text-[#1a1a1a] hover:text-[#C4A265]">
+                      <Link href={`/organizations/${org.id}`} className="font-medium text-[#1a1a1a] hover:text-[#F26522]">
                         {org.name}
                       </Link>
                     </TableCell>

@@ -17,9 +17,10 @@ export default function JobsLayout({ children }: { children: React.ReactNode }) 
 
   return (
     <div className="mx-auto max-w-[1200px] space-y-5">
-      <div className="flex items-center justify-between pt-1">
+      <div className="flex items-center gap-3 pt-1">
+        <div className="h-9 w-1.5 rounded-full bg-[#F26522]" />
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Jobs Review</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-gray-900">Jobs Review</h1>
           <p className="text-sm text-gray-400 mt-0.5">
             Open-job accountability · commitments on the record
           </p>
@@ -40,11 +41,11 @@ export default function JobsLayout({ children }: { children: React.ReactNode }) 
               className={cn(
                 "flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors",
                 isActive
-                  ? "border-[#C4A265] text-gray-900"
+                  ? "border-[#F26522] text-gray-900"
                   : "border-transparent text-gray-400 hover:text-gray-600"
               )}
             >
-              <tab.icon className="h-4 w-4" />
+              <tab.icon className={cn("h-4 w-4", isActive ? "text-[#F26522]" : "")} />
               {tab.name}
             </Link>
           );

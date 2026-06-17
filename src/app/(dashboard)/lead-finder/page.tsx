@@ -240,7 +240,7 @@ function LeadFinderMap({
               className: "search-result-pin",
               html: `<div style="
                 width:28px;height:28px;border-radius:50% 50% 50% 0;
-                background:#C4A265;transform:rotate(-45deg);
+                background:#F26522;transform:rotate(-45deg);
                 display:flex;align-items:center;justify-content:center;
                 border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.3);
               "><span style="transform:rotate(45deg);font-size:12px;font-weight:700;color:#fff;">${idx + 1}</span></div>`,
@@ -259,7 +259,7 @@ function LeadFinderMap({
                 ${lead.city}, ${lead.state} ${lead.zipCode}
               </div>
               ${lead.email ? `<div style="font-size:10px;color:#3b82f6;margin-top:4px;">${lead.email}</div>` : ""}
-              <div style="font-size:10px;color:#C4A265;margin-top:4px;font-style:italic;">${lead.reasoning.slice(0, 100)}${lead.reasoning.length > 100 ? "..." : ""}</div>
+              <div style="font-size:10px;color:#F26522;margin-top:4px;font-style:italic;">${lead.reasoning.slice(0, 100)}${lead.reasoning.length > 100 ? "..." : ""}</div>
             </div>
           `);
 
@@ -311,7 +311,7 @@ function LeadFinderMap({
             <div className="border-t pt-1 mt-1">
               <p className="font-semibold text-gray-700 mb-0.5">AI Results</p>
               <div className="flex items-center gap-1.5">
-                <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: "#C4A265" }} />
+                <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: "#F26522" }} />
                 <span className="text-gray-600">New leads</span>
               </div>
             </div>
@@ -582,7 +582,7 @@ export default function LeadFinderPage() {
                       <div className="space-y-1 flex-1">
                         <div className="flex items-center gap-2">
                           {/* Map pin number */}
-                          <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#C4A265] text-white text-[10px] font-bold shrink-0">
+                          <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#F26522] text-white text-[10px] font-bold shrink-0">
                             {idx + 1}
                           </span>
                           <span className="font-medium text-base">{lead.fullName}</span>
@@ -645,7 +645,7 @@ export default function LeadFinderPage() {
                             )}
                             <Link
                               href={`/contacts/${importedContactIds[idx]}`}
-                              className="text-xs text-gray-600 hover:text-[#C4A265] hover:underline"
+                              className="text-xs text-gray-600 hover:text-[#F26522] hover:underline"
                             >
                               View Contact →
                             </Link>

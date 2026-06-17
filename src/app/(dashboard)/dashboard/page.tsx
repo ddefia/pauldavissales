@@ -160,7 +160,7 @@ function WeeklyTracker({
       <div className="px-5 pt-4 pb-3 border-b border-gray-50">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Target className="h-4 w-4 text-[#C4A265]" />
+            <Target className="h-4 w-4 text-[#F26522]" />
             <h2 className="text-sm font-semibold text-gray-800">{plan.label}</h2>
           </div>
           <div className="flex items-center gap-2">
@@ -236,7 +236,7 @@ function WeeklyTracker({
           return (
             <div className="flex items-center justify-between">
               <span className="text-xs font-medium text-gray-500">Week progress</span>
-              <span className="text-xs font-bold text-[#C4A265]">{overallPct}%</span>
+              <span className="text-xs font-bold text-[#F26522]">{overallPct}%</span>
             </div>
           );
         })()}
@@ -281,7 +281,7 @@ function NoWeeklyPlan({ onCreated }: { onCreated: () => void }) {
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
       <div className="flex items-center gap-2 mb-3">
-        <Target className="h-4 w-4 text-[#C4A265]" />
+        <Target className="h-4 w-4 text-[#F26522]" />
         <h2 className="text-sm font-semibold text-gray-800">Weekly Plan</h2>
       </div>
       <p className="text-xs text-gray-400 mb-3">
@@ -345,7 +345,7 @@ function MarketIntel() {
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
       <div className="px-5 pt-4 pb-3 border-b border-gray-50 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Newspaper className="h-4 w-4 text-[#C4A265]" />
+          <Newspaper className="h-4 w-4 text-[#F26522]" />
           <h2 className="text-sm font-semibold text-gray-800">Market Intel</h2>
           <span className="text-[10px] text-gray-300 font-medium">South Florida</span>
         </div>
@@ -389,7 +389,7 @@ function MarketIntel() {
                   <Icon className={`h-3.5 w-3.5 ${meta.color}`} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-semibold text-gray-800 line-clamp-2 group-hover:text-[#C4A265] transition-colors leading-snug">
+                  <p className="text-xs font-semibold text-gray-800 line-clamp-2 group-hover:text-[#F26522] transition-colors leading-snug">
                     {item.title}
                   </p>
                   {item.snippet && (
@@ -403,7 +403,7 @@ function MarketIntel() {
                     <span className={`text-[10px] font-medium ${meta.color}`}>{item.category}</span>
                   </div>
                 </div>
-                <ExternalLink className="h-3.5 w-3.5 text-gray-200 group-hover:text-[#C4A265] shrink-0 mt-1 transition-colors" />
+                <ExternalLink className="h-3.5 w-3.5 text-gray-200 group-hover:text-[#F26522] shrink-0 mt-1 transition-colors" />
               </a>
             );
           })}
@@ -486,7 +486,7 @@ export default function DashboardPage() {
               </h2>
               <Link
                 href="/contacts"
-                className="text-xs text-[#C4A265] hover:underline font-medium flex items-center gap-0.5"
+                className="text-xs text-[#F26522] hover:underline font-medium flex items-center gap-0.5"
               >
                 All contacts <ChevronRight className="h-3 w-3" />
               </Link>
@@ -504,7 +504,7 @@ export default function DashboardPage() {
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <p className="text-sm font-semibold text-gray-900 truncate group-hover:text-[#C4A265] transition-colors">
+                      <p className="text-sm font-semibold text-gray-900 truncate group-hover:text-[#F26522] transition-colors">
                         {contact.fullName}
                       </p>
                       {contact.hasEnrichment && (
@@ -536,7 +536,7 @@ export default function DashboardPage() {
                         <span className="text-[10px] font-medium">Email</span>
                       </div>
                     )}
-                    <ChevronRight className="h-4 w-4 text-gray-200 group-hover:text-[#C4A265] transition-colors" />
+                    <ChevronRight className="h-4 w-4 text-gray-200 group-hover:text-[#F26522] transition-colors" />
                   </div>
                 </Link>
               ))}
