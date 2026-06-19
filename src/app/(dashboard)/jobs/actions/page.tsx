@@ -62,7 +62,7 @@ export default function ActionTasksPage() {
   };
 
   const exportPdf = () => {
-    const html = buildPrintHtml(groups, pm || "All PMs", status);
+    const html = buildPrintHtml(groups, pm || (pms.length > 0 ? "All PMs" : "All jobs"), status);
     const w = window.open("", "_blank");
     if (!w) return;
     w.document.write(html);
@@ -77,18 +77,20 @@ export default function ActionTasksPage() {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-2">
-        <select
-          value={pm}
-          onChange={(e) => setPm(e.target.value)}
-          className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs text-gray-700"
-        >
-          <option value="">All PMs</option>
-          {pms.map((p) => (
-            <option key={p} value={p}>
-              {p}
-            </option>
-          ))}
-        </select>
+        {pms.length > 0 && (
+          <select
+            value={pm}
+            onChange={(e) => setPm(e.target.value)}
+            className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs text-gray-700"
+          >
+            <option value="">All PMs</option>
+            {pms.map((p) => (
+              <option key={p} value={p}>
+                {p}
+              </option>
+            ))}
+          </select>
+        )}
         <div className="flex items-center rounded-lg border border-gray-200 bg-white overflow-hidden">
           {[
             { v: "open", l: "Open" },

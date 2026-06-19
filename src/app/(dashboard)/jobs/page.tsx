@@ -19,6 +19,9 @@ interface DashboardData {
   currentTotal: number;
   variance: number;
   variancePct: number | null;
+  gpTotal: number;
+  blendedMarginPct: number | null;
+  hasGp: boolean;
   cashFlow: { month: string; label: string; amount: number }[];
   byStatus: { status: string; count: number }[];
   byPm: { pm: string; count: number; currentTotal: number }[];
@@ -80,7 +83,7 @@ export default function JobsDashboardPage() {
   return (
     <div className="space-y-5">
       {/* Stat row */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className={`grid grid-cols-2 gap-4 ${data.hasGp ? "lg:grid-cols-5" : "lg:grid-cols-4"}`}>
         <StatCard
           icon={Briefcase}
           label="Open jobs"
@@ -106,6 +109,15 @@ export default function JobsDashboardPage() {
           sub={fmtPct(data.variancePct)}
           tint={data.variance < 0 ? "text-red-600" : "text-emerald-600"}
         />
+        {data.hasGp && (
+          <StatCard
+            icon={TrendingUp}
+            label="Est. gross profit"
+            value={fmtCurrency(data.gpTotal, true)}
+            sub={data.blendedMarginPct != null ? `${data.blendedMarginPct.toFixed(1)}% margin` : undefined}
+            tint="text-gray-700"
+          />
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">

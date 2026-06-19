@@ -37,12 +37,17 @@ export async function GET() {
   // ── Open job stats ──
   let committedTotal = 0;
   let currentTotal = 0;
+  let gpTotal = 0;
   for (const job of openJobs) {
     if (job.committedEstimate != null) committedTotal += job.committedEstimate;
     if (job.currentEstimate != null) currentTotal += job.currentEstimate;
+    if (job.actualGp != null) gpTotal += job.actualGp;
   }
   const variance = currentTotal - committedTotal;
   const variancePct = committedTotal ? (variance / committedTotal) * 100 : null;
+  // Blended actual gross-profit margin across open jobs.
+  const blendedMarginPct = currentTotal ? (gpTotal / currentTotal) * 100 : null;
+  const hasGp = openJobs.some((j) => j.actualGp != null);
 
   // ── # of jobs by status ──
   const statusCounts = new Map<string, number>();
@@ -112,6 +117,9 @@ export async function GET() {
       currentTotal,
       variance,
       variancePct,
+      gpTotal,
+      blendedMarginPct,
+      hasGp,
       cashFlow,
       byStatus,
       byPm,

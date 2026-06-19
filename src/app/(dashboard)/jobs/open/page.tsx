@@ -46,6 +46,8 @@ interface Job {
   jobStatus: string | null;
   currentEstimate: number | null;
   committedEstimate: number | null;
+  actualGp: number | null;
+  actualGpPct: number | null;
   rmsUrl: string | null;
   externalId: string | null;
   targetMargin: number | null;
@@ -113,8 +115,12 @@ export default function OpenJobsPage() {
     <div className="space-y-4">
       {/* Filter bar */}
       <div className="flex flex-wrap items-center gap-2">
-        <FilterSelect label="PM" value={pm} onChange={setPm} options={options.pms} />
-        <FilterSelect label="Office" value={office} onChange={setOffice} options={options.offices} />
+        {options.pms.length > 0 && (
+          <FilterSelect label="PM" value={pm} onChange={setPm} options={options.pms} />
+        )}
+        {options.offices.length > 0 && (
+          <FilterSelect label="Office" value={office} onChange={setOffice} options={options.offices} />
+        )}
         <FilterSelect label="Status" value={status} onChange={setStatus} options={options.statuses} />
         <div className="flex items-center rounded-lg border border-gray-200 bg-white overflow-hidden">
           {["open", "closed", "all"].map((v) => (
@@ -146,7 +152,7 @@ export default function OpenJobsPage() {
           <div>Customer</div>
           <div>Status</div>
           <div>Estimate (committed → current)</div>
-          <div>Target margin</div>
+          <div>Margin (actual · target)</div>
           <div>Target date</div>
           <div>Action item</div>
           <div className="w-8" />
@@ -312,17 +318,24 @@ function JobRow({
           )}
         </div>
 
-        {/* Target margin */}
-        <div className="text-xs text-gray-700 tabular-nums flex items-center gap-1">
+        {/* Margin — actual GP from export, with manual target beneath */}
+        <div className="text-xs tabular-nums">
+          {job.actualGpPct != null && (
+            <div className="font-semibold text-gray-800" title="Actual gross-profit margin (from export)">
+              {job.actualGpPct.toFixed(1)}%
+              <span className="font-normal text-gray-400"> GP</span>
+            </div>
+          )}
           {job.targetMargin != null ? (
-            <>
+            <div className="flex items-center gap-1 text-[11px] text-gray-500">
               <Lock className="h-2.5 w-2.5 text-gray-300" />
+              target{" "}
               {job.targetMarginUnit === "currency"
                 ? fmtCurrency(job.targetMargin, true)
                 : `${job.targetMargin}%`}
-            </>
+            </div>
           ) : (
-            <span className="text-gray-300">—</span>
+            job.actualGpPct == null && <span className="text-gray-300">—</span>
           )}
         </div>
 
@@ -468,6 +481,19 @@ function JobDetail({ job, onChanged }: { job: Job; onChanged: () => void }) {
             className={inputCls}
           />
         </Field>
+        {job.actualGp != null && (
+          <div className="rounded-lg bg-white border border-gray-100 px-2.5 py-1.5">
+            <p className="text-[10px] font-medium uppercase tracking-wide text-gray-400">
+              Actual GP (from export)
+            </p>
+            <p className="text-xs font-semibold text-gray-800 tabular-nums">
+              {fmtCurrency(job.actualGp)}
+              {job.actualGpPct != null && (
+                <span className="font-normal text-gray-500"> · {job.actualGpPct.toFixed(1)}% margin</span>
+              )}
+            </p>
+          </div>
+        )}
         <Field label="Target margin">
           <div className="flex gap-1">
             <input

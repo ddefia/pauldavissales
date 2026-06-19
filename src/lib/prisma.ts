@@ -17,7 +17,7 @@ function createPrismaClient() {
 }
 
 // Force fresh client after schema changes by keying on a version
-const SCHEMA_VERSION = 3; // bump when schema changes
+const SCHEMA_VERSION = 4; // bump when schema changes
 const globalKey = `prisma_v${SCHEMA_VERSION}`;
 const globalStore = globalThis as unknown as Record<string, PrismaClient | undefined>;
 

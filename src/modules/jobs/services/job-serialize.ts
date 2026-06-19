@@ -23,6 +23,12 @@ export function serializeJob(job: JobWithRelations) {
       ? (variance / job.committedEstimate) * 100
       : null;
 
+  // Actual gross-profit margin (%) from the uploaded GP$ ÷ current estimate.
+  const actualGpPct =
+    job.actualGp != null && job.currentEstimate
+      ? (job.actualGp / job.currentEstimate) * 100
+      : null;
+
   // Action items arrive newest-first; surface the most recent OPEN one inline,
   // falling back to the most recent of any status.
   const openActions = job.actionItems.filter((a) => a.status === "open");
@@ -32,6 +38,7 @@ export function serializeJob(job: JobWithRelations) {
     ...job,
     variance,
     variancePct,
+    actualGpPct,
     latestActionItem,
     openActionCount: openActions.length,
     isOpen: !job.struckOut && !job.closedFromExport,

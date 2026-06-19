@@ -15,6 +15,7 @@ export type JobColumnField =
   | "pm"
   | "jobStatus"
   | "currentEstimate"
+  | "actualGp"
   | "rmsUrl"
   | "externalId";
 
@@ -54,9 +55,15 @@ const FIELD_ALIASES: Record<JobColumnField, string[]> = {
   ],
   currentEstimate: [
     "estimate", "estimate value", "estimate amount", "current estimate",
-    "total estimate", "approved estimate", "rcv", "estimate total",
-    "contract amount", "contract value", "job value", "job amount", "amount",
-    "total", "value", "est value", "est amount", "sold estimate",
+    "total estimate", "total estimates", "approved estimate", "rcv",
+    "estimate total", "contract amount", "contract value", "job value",
+    "job amount", "amount", "total", "value", "est value", "est amount",
+    "sold estimate",
+  ],
+  actualGp: [
+    "estimate gp", "gross profit", "estimate gross profit", "gp($)",
+    "gross profit($)", "estimate gp($)", "gp after wo adjustment",
+    "estimate gp after wo adjustment",
   ],
   rmsUrl: [
     "url", "link", "job url", "rms link", "job link", "rms url", "web link",
@@ -72,6 +79,7 @@ const FIELD_ORDER: JobColumnField[] = [
   "customerName",
   "office",
   "pm",
+  "actualGp",
   "currentEstimate",
   "rmsUrl",
 ];
@@ -93,6 +101,7 @@ export function detectJobColumns(headers: string[]): JobColumnDetection {
     pm: null,
     jobStatus: null,
     currentEstimate: null,
+    actualGp: null,
     rmsUrl: null,
     externalId: null,
   };

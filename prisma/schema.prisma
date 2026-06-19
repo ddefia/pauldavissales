@@ -613,6 +613,7 @@ model Job {
   pm              String?
   jobStatus       String?
   currentEstimate Float?
+  actualGp        Float? // actual estimate gross profit ($) from the export, if present
   rmsUrl          String? // deep-link, if the export provides a URL column
   externalId      String? // RMS internal id, if the export provides one
   rawData         Json? // full uploaded row, for extra/unmapped columns

@@ -117,6 +117,7 @@ export async function processJobImport(
       pm: get(row, "pm"),
       jobStatus: get(row, "jobStatus"),
       currentEstimate: parseCurrency(get(row, "currentEstimate")),
+      actualGp: parseCurrency(get(row, "actualGp")),
       rmsUrl: get(row, "rmsUrl"),
       externalId: get(row, "externalId"),
       rawData: row as unknown as object,

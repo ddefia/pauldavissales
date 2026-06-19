@@ -2,16 +2,17 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth-bypass";
 import prisma from "@/lib/prisma";
 
-// Sensible starting set if the franchise hasn't curated their own yet.
+// Default set, drawn from the franchise's actual RMS status vocabulary
+// (ordered roughly by workflow). Editable in Settings.
 const DEFAULT_STATUSES = [
-  "New / Intake",
-  "Awaiting Adjuster",
-  "Estimate Approved",
-  "In Progress",
-  "Awaiting Materials",
-  "Scheduled",
-  "Work Complete",
-  "Awaiting Payment",
+  "Pending Sales",
+  "Pre-Production",
+  "Work in Progress",
+  "Completed without Paperwork",
+  "Waiting for Final Closure",
+  "Invoice Pending",
+  "Accounts Receivable",
+  "Closed",
 ];
 
 // GET /api/jobs/statuses — the custom job-status list (whitepaper §6.4).
