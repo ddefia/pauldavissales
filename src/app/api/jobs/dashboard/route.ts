@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth-bypass";
 import prisma from "@/lib/prisma";
+import { isClosedStatus } from "@/modules/jobs/services/job-serialize";
 
 const DRIFT_THRESHOLD = 0.05; // estimate drifted down >5% from commitment
 
@@ -18,10 +19,11 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const openJobs = await prisma.job.findMany({
+  const candidates = await prisma.job.findMany({
     where: { struckOut: false, closedFromExport: false },
     include: { billingForecasts: true },
   });
+  const openJobs = candidates.filter((j) => !isClosedStatus(j.jobStatus));
 
   // ── Cash-flow forecast: sum every open job's billing forecast by month ──
   const monthTotals = new Map<string, number>();

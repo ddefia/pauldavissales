@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth-bypass";
 import prisma from "@/lib/prisma";
+import { isClosedStatus } from "@/modules/jobs/services/job-serialize";
 
 // GET /api/jobs/action-items — every action item grouped under its job, for the
 // Action Tasks page. Optional ?pm= and ?status=open|done filters. Closed/struck
@@ -29,6 +30,7 @@ export async function GET(request: NextRequest) {
       customerName: true,
       pm: true,
       office: true,
+      jobStatus: true,
       rmsUrl: true,
       actionItems: {
         where: status ? { status } : {},
@@ -37,8 +39,10 @@ export async function GET(request: NextRequest) {
     },
   });
 
-  // Drop jobs whose items all filtered out.
-  const groups = jobs.filter((j) => j.actionItems.length > 0);
+  // Drop closed-status jobs and any whose items all filtered out.
+  const groups = jobs.filter(
+    (j) => !isClosedStatus(j.jobStatus) && j.actionItems.length > 0
+  );
 
   return NextResponse.json({ data: groups });
 }

@@ -10,8 +10,9 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  // Distinct values across all jobs so the Status filter still works in the
+  // Closed/All views (e.g. filtering to "Closed").
   const jobs = await prisma.job.findMany({
-    where: { struckOut: false, closedFromExport: false },
     select: { pm: true, office: true, jobStatus: true },
   });
 

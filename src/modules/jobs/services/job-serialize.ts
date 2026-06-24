@@ -12,6 +12,26 @@ export type JobWithRelations = Job & {
   billingForecasts: JobBillingForecast[];
 };
 
+// A job is "closed" for review purposes if its uploaded Job Status reads as
+// terminal. RMS exports often include closed jobs, and those should drop out
+// of the Open list automatically (not just when they leave the export).
+const CLOSED_STATUSES = new Set([
+  "closed",
+  "cancelled",
+  "canceled",
+  "void",
+  "voided",
+  "lost",
+  "dead",
+  "archived",
+]);
+
+export function isClosedStatus(status: string | null | undefined): boolean {
+  if (!status) return false;
+  const v = status.trim().toLowerCase();
+  return CLOSED_STATUSES.has(v) || v.startsWith("closed") || v.startsWith("cancel");
+}
+
 export function serializeJob(job: JobWithRelations) {
   const variance =
     job.currentEstimate != null && job.committedEstimate != null
@@ -41,7 +61,7 @@ export function serializeJob(job: JobWithRelations) {
     actualGpPct,
     latestActionItem,
     openActionCount: openActions.length,
-    isOpen: !job.struckOut && !job.closedFromExport,
+    isOpen: !job.struckOut && !job.closedFromExport && !isClosedStatus(job.jobStatus),
   };
 }
 
