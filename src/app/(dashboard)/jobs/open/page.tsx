@@ -23,6 +23,7 @@ import {
   fmtDate,
   toDateInput,
   upcomingMonths,
+  statusBadgeClass,
 } from "@/modules/jobs/format";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -126,7 +127,13 @@ export default function OpenJobsPage() {
         {options.offices.length > 0 && (
           <FilterSelect label="Office" value={office} onChange={setOffice} options={options.offices} />
         )}
-        <FilterSelect label="Status" value={status} onChange={setStatus} options={options.statuses} />
+        <FilterSelect
+          label="Status"
+          allLabel="All statuses"
+          value={status}
+          onChange={setStatus}
+          options={options.statuses}
+        />
         <div className="flex items-center rounded-lg border border-gray-200 bg-white overflow-hidden">
           {["open", "closed", "all"].map((v) => (
             <button
@@ -218,11 +225,13 @@ function FilterSelect({
   value,
   onChange,
   options,
+  allLabel,
 }: {
   label: string;
   value: string;
   onChange: (v: string) => void;
   options: string[];
+  allLabel?: string;
 }) {
   return (
     <select
@@ -230,7 +239,7 @@ function FilterSelect({
       onChange={(e) => onChange(e.target.value)}
       className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs text-gray-700 focus:outline-none focus:ring-1 focus:ring-[#F26522]"
     >
-      <option value="">All {label}s</option>
+      <option value="">{allLabel ?? `All ${label}s`}</option>
       {options.map((o) => (
         <option key={o} value={o}>
           {o}
@@ -318,7 +327,11 @@ function JobRow({
         {/* Status */}
         <div className="min-w-0">
           {job.jobStatus ? (
-            <span className="inline-block text-[11px] font-medium text-gray-600 bg-gray-100 px-2 py-0.5 rounded truncate max-w-full">
+            <span
+              className={`inline-block text-[11px] font-medium px-2 py-0.5 rounded-md truncate max-w-full ${statusBadgeClass(
+                job.jobStatus
+              )}`}
+            >
               {job.jobStatus}
             </span>
           ) : (
@@ -328,17 +341,30 @@ function JobRow({
 
         {/* Estimate */}
         <div className="text-xs tabular-nums">
-          <div className="flex items-center gap-1.5">
-            <span className="text-gray-400" title="Committed (locked snapshot)">
-              {fmtCurrency(job.committedEstimate, true)}
-            </span>
-            <span className="text-gray-300">→</span>
-            <span className="font-semibold text-gray-800">{fmtCurrency(job.currentEstimate, true)}</span>
-          </div>
-          {job.variance != null && job.variance !== 0 && (
-            <span className={`text-[11px] ${varianceColor}`}>
-              {fmtCurrency(job.variance, true)} ({fmtPct(job.variancePct)})
-            </span>
+          {job.committedEstimate == null && job.currentEstimate == null ? (
+            <span className="text-gray-300">—</span>
+          ) : (
+            <>
+              <div className="flex items-center gap-1.5">
+                {job.committedEstimate != null &&
+                  job.committedEstimate !== job.currentEstimate && (
+                    <>
+                      <span className="text-gray-400" title="Committed (locked snapshot)">
+                        {fmtCurrency(job.committedEstimate, true)}
+                      </span>
+                      <span className="text-gray-300">→</span>
+                    </>
+                  )}
+                <span className="font-semibold text-gray-800">
+                  {fmtCurrency(job.currentEstimate, true)}
+                </span>
+              </div>
+              {job.variance != null && job.variance !== 0 && (
+                <span className={`text-[11px] ${varianceColor}`}>
+                  {fmtCurrency(job.variance, true)} ({fmtPct(job.variancePct)})
+                </span>
+              )}
+            </>
           )}
         </div>
 
@@ -471,7 +497,7 @@ function JobDetail({ job, onChanged }: { job: Job; onChanged: () => void }) {
   const [saving, setSaving] = useState(false);
 
   const inputCls =
-    "w-full rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-[#F26522]";
+    "w-full rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-[#F26522] [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none";
 
   const saveCommitments = async () => {
     setSaving(true);
@@ -610,25 +636,31 @@ function BillingEditor({ job, onChanged }: { job: Job; onChanged: () => void }) 
       <h3 className="text-xs font-semibold text-gray-700">3-month billing forecast</h3>
       {rows.map((r, i) => (
         <div key={i} className="flex gap-1.5">
-          <select
-            value={r.month}
-            onChange={(e) => update(i, "month", e.target.value)}
-            className="rounded-lg border border-gray-200 bg-white px-2 py-1.5 text-xs flex-1"
-          >
-            <option value="">Month…</option>
-            {monthOpts.map((m) => (
-              <option key={m.key} value={m.key}>
-                {m.label}
-              </option>
-            ))}
-          </select>
-          <input
-            type="number"
-            value={r.amount}
-            onChange={(e) => update(i, "amount", e.target.value)}
-            placeholder="$ amount"
-            className="rounded-lg border border-gray-200 bg-white px-2 py-1.5 text-xs w-28"
-          />
+          <div className="relative flex-1">
+            <select
+              value={r.month}
+              onChange={(e) => update(i, "month", e.target.value)}
+              className="w-full appearance-none rounded-lg border border-gray-200 bg-white pl-2.5 pr-7 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-[#F26522]"
+            >
+              <option value="">Month…</option>
+              {monthOpts.map((m) => (
+                <option key={m.key} value={m.key}>
+                  {m.label}
+                </option>
+              ))}
+            </select>
+            <ChevronDown className="pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-gray-400" />
+          </div>
+          <div className="relative w-28">
+            <span className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-gray-400">$</span>
+            <input
+              type="number"
+              value={r.amount}
+              onChange={(e) => update(i, "amount", e.target.value)}
+              placeholder="amount"
+              className="w-full rounded-lg border border-gray-200 bg-white pl-5 pr-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-[#F26522] [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+            />
+          </div>
         </div>
       ))}
       <div className="flex items-center justify-between">
