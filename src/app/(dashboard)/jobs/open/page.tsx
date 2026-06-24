@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
 import {
   ChevronDown,
   ChevronRight,
@@ -14,6 +15,7 @@ import {
   X,
   Save,
   RotateCcw,
+  Upload,
 } from "lucide-react";
 import {
   fmtCurrency,
@@ -83,6 +85,9 @@ export default function OpenJobsPage() {
 
   const [expanded, setExpanded] = useState<string | null>(null);
   const [addingFor, setAddingFor] = useState<string | null>(null);
+
+  // Distinguish "nothing uploaded yet" from "filters hid everything".
+  const filtersActive = !!(pm || office || status || search) || view !== "open";
 
   const loadJobs = useCallback(() => {
     const params = new URLSearchParams();
@@ -161,9 +166,28 @@ export default function OpenJobsPage() {
         {loading ? (
           <div className="p-10 text-center text-sm text-gray-400">Loading jobs…</div>
         ) : jobs.length === 0 ? (
-          <div className="p-10 text-center text-sm text-gray-400">
-            No jobs match these filters.
-          </div>
+          filtersActive ? (
+            <div className="p-10 text-center text-sm text-gray-400">
+              No jobs match these filters.
+            </div>
+          ) : (
+            <div className="p-12 text-center">
+              <div className="w-12 h-12 rounded-xl bg-[#F26522]/10 flex items-center justify-center mx-auto mb-4">
+                <Upload className="h-6 w-6 text-[#F26522]" />
+              </div>
+              <h3 className="text-base font-semibold text-gray-800">No jobs yet</h3>
+              <p className="text-sm text-gray-400 mt-1 max-w-sm mx-auto">
+                Nothing is preloaded — this tool reads your RMS export. Upload your
+                open-jobs export to populate the list.
+              </p>
+              <Link
+                href="/jobs/settings"
+                className="inline-flex items-center gap-2 mt-5 text-xs font-semibold text-white bg-[#F26522] hover:bg-[#d9551a] rounded-lg px-4 py-2.5 transition-colors"
+              >
+                <Upload className="h-3.5 w-3.5" /> Upload RMS export
+              </Link>
+            </div>
+          )
         ) : (
           jobs.map((job) => (
             <JobRow

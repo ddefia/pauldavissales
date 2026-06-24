@@ -12,6 +12,7 @@
  */
 
 import prisma from "@/lib/prisma";
+import type { Prisma } from "@/generated/prisma/client";
 import { parseFile } from "@/modules/ingest/services/file-parser";
 import {
   detectJobColumns,
@@ -100,6 +101,11 @@ export async function processJobImport(
   let reopened = 0;
   const now = new Date();
 
+  // Collect inserts and updates, then write them in bulk. Row-by-row awaits
+  // don't scale — a ~2,000-row export would exceed the serverless time limit.
+  const creates: Prisma.JobCreateManyInput[] = [];
+  const updates: Prisma.PrismaPromise<unknown>[] = [];
+
   for (const row of parsed.rows) {
     const jobNumber = get(row, "jobNumber");
     if (!jobNumber) {
@@ -120,7 +126,7 @@ export async function processJobImport(
       actualGp: parseCurrency(get(row, "actualGp")),
       rmsUrl: get(row, "rmsUrl"),
       externalId: get(row, "externalId"),
-      rawData: row as unknown as object,
+      rawData: row as Prisma.InputJsonValue,
       lastSeenAt: now,
       lastImportId: importLog.id,
     };
@@ -129,37 +135,51 @@ export async function processJobImport(
 
     if (prior) {
       // UPDATE — Layer A only. Layer B is never named here, so it is preserved.
-      const wasClosed = prior.closedFromExport;
-      await prisma.job.update({
-        where: { id: prior.id },
-        data: {
-          ...layerA,
-          // Job reappeared in the export → it is open again.
-          closedFromExport: false,
-          closedFromExportAt: null,
-          // Snapshot the committed estimate the first time we ever see a value
-          // for a job that didn't have one captured yet. Never overwrite.
-          ...(prior.committedEstimate == null && layerA.currentEstimate != null
-            ? { committedEstimate: layerA.currentEstimate, committedEstimateAt: now }
-            : {}),
-        },
-      });
+      updates.push(
+        prisma.job.update({
+          where: { id: prior.id },
+          data: {
+            ...layerA,
+            // Job reappeared in the export → it is open again.
+            closedFromExport: false,
+            closedFromExportAt: null,
+            // Snapshot the committed estimate the first time we ever see a value
+            // for a job that didn't have one captured yet. Never overwrite.
+            ...(prior.committedEstimate == null && layerA.currentEstimate != null
+              ? { committedEstimate: layerA.currentEstimate, committedEstimateAt: now }
+              : {}),
+          },
+        })
+      );
       matched++;
-      if (wasClosed) reopened++;
+      if (prior.closedFromExport) reopened++;
     } else {
       // INSERT — new job. Layer B starts empty; committed estimate is snapshotted.
-      await prisma.job.create({
-        data: {
-          jobNumber,
-          ...layerA,
-          firstSeenAt: now,
-          ...(layerA.currentEstimate != null
-            ? { committedEstimate: layerA.currentEstimate, committedEstimateAt: now }
-            : {}),
-        },
+      creates.push({
+        jobNumber,
+        ...layerA,
+        firstSeenAt: now,
+        ...(layerA.currentEstimate != null
+          ? { committedEstimate: layerA.currentEstimate, committedEstimateAt: now }
+          : {}),
       });
       inserted++;
     }
+  }
+
+  // Bulk insert new jobs.
+  const CREATE_CHUNK = 500;
+  for (let i = 0; i < creates.length; i += CREATE_CHUNK) {
+    await prisma.job.createMany({
+      data: creates.slice(i, i + CREATE_CHUNK),
+      skipDuplicates: true,
+    });
+  }
+
+  // Apply updates in batched transactions (one round-trip per batch).
+  const UPDATE_CHUNK = 100;
+  for (let i = 0; i < updates.length; i += UPDATE_CHUNK) {
+    await prisma.$transaction(updates.slice(i, i + UPDATE_CHUNK));
   }
 
   // Jobs present before but absent from this export → flag as closed.
