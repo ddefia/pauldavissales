@@ -33,6 +33,38 @@ export function statusBadgeClass(status: string | null | undefined): string {
   return STATUS_PALETTE[h % STATUS_PALETTE.length];
 }
 
+// Solid bar color matching the pill color, for charts.
+const STATUS_BAR: Record<string, string> = {
+  "pending sales": "bg-blue-500",
+  "pre-production": "bg-purple-500",
+  "work in progress": "bg-amber-500",
+  "completed without paperwork": "bg-teal-500",
+  "waiting for final closure": "bg-indigo-500",
+  "invoice pending": "bg-yellow-500",
+  "accounts receivable": "bg-emerald-500",
+  closed: "bg-gray-400",
+};
+
+const BAR_PALETTE = [
+  "bg-blue-500",
+  "bg-purple-500",
+  "bg-amber-500",
+  "bg-teal-500",
+  "bg-indigo-500",
+  "bg-rose-500",
+  "bg-cyan-500",
+  "bg-lime-500",
+];
+
+export function statusBarClass(status: string | null | undefined): string {
+  if (!status) return "bg-gray-300";
+  const key = status.trim().toLowerCase();
+  if (STATUS_BAR[key]) return STATUS_BAR[key];
+  let h = 0;
+  for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) >>> 0;
+  return BAR_PALETTE[h % BAR_PALETTE.length];
+}
+
 export function fmtCurrency(n: number | null | undefined, compact = false): string {
   if (n == null) return "—";
   return new Intl.NumberFormat("en-US", {

@@ -11,7 +11,7 @@ import {
   Upload,
   ArrowRight,
 } from "lucide-react";
-import { fmtCurrency, fmtPct, fmtDate } from "@/modules/jobs/format";
+import { fmtCurrency, fmtPct, fmtDate, statusBarClass } from "@/modules/jobs/format";
 
 interface DashboardData {
   openCount: number;
@@ -176,12 +176,13 @@ export default function JobsDashboardPage() {
           <div className="p-5 space-y-2.5">
             {data.byStatus.map((s) => (
               <div key={s.status} className="flex items-center gap-3">
-                <span className="text-xs text-gray-600 w-32 truncate" title={s.status}>
-                  {s.status}
+                <span className="flex items-center gap-1.5 text-xs text-gray-600 w-32 truncate" title={s.status}>
+                  <span className={`h-2 w-2 rounded-full shrink-0 ${statusBarClass(s.status)}`} />
+                  <span className="truncate">{s.status}</span>
                 </span>
                 <div className="flex-1 h-4 bg-gray-100 rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-[#1a1a1a] rounded-full"
+                    className={`h-full rounded-full ${statusBarClass(s.status)}`}
                     style={{ width: `${(s.count / maxStatus) * 100}%` }}
                   />
                 </div>
