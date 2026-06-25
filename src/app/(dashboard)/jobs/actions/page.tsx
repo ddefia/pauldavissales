@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { Check, ExternalLink, FileDown, ClipboardList } from "lucide-react";
-import { fmtDate } from "@/modules/jobs/format";
+import { fmtDate, statusBadgeClass } from "@/modules/jobs/format";
 
 interface ActionItem {
   id: string;
@@ -17,6 +17,7 @@ interface JobGroup {
   customerName: string | null;
   pm: string | null;
   office: string | null;
+  jobStatus: string | null;
   rmsUrl: string | null;
   actionItems: ActionItem[];
 }
@@ -130,7 +131,18 @@ export default function ActionTasksPage() {
             <div key={g.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
               <div className="px-5 py-3 border-b border-gray-50 flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-semibold text-gray-900">{g.customerName || "—"}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-semibold text-gray-900">{g.customerName || "—"}</p>
+                    {g.jobStatus && (
+                      <span
+                        className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${statusBadgeClass(
+                          g.jobStatus
+                        )}`}
+                      >
+                        {g.jobStatus}
+                      </span>
+                    )}
+                  </div>
                   <p className="text-[11px] text-gray-400">
                     #{g.jobNumber}
                     {g.pm ? ` · ${g.pm}` : ""}

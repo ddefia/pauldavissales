@@ -516,9 +516,55 @@ function JobDetail({ job, onChanged }: { job: Job; onChanged: () => void }) {
   };
 
   return (
-    <div className="bg-gray-50/70 border-t border-gray-100 px-5 py-4 grid grid-cols-1 lg:grid-cols-3 gap-5">
-      {/* Commitments */}
-      <div className="space-y-3">
+    <div className="bg-gray-50/70 border-t border-gray-100 px-5 py-4 space-y-4">
+      {/* At-a-glance summary of this job */}
+      <div className="flex flex-wrap items-center gap-x-6 gap-y-2 rounded-xl bg-white border border-gray-100 px-4 py-3">
+        <SummaryStat label="Status">
+          {job.jobStatus ? (
+            <span
+              className={`inline-block text-[11px] font-medium px-2 py-0.5 rounded-md ${statusBadgeClass(
+                job.jobStatus
+              )}`}
+            >
+              {job.jobStatus}
+            </span>
+          ) : (
+            "—"
+          )}
+        </SummaryStat>
+        <SummaryStat label="Current estimate">{fmtCurrency(job.currentEstimate)}</SummaryStat>
+        {job.committedEstimate != null && (
+          <SummaryStat label="Committed">{fmtCurrency(job.committedEstimate)}</SummaryStat>
+        )}
+        {job.variance != null && job.variance !== 0 && (
+          <SummaryStat label="Variance">
+            <span className={job.variance < 0 ? "text-red-600" : "text-emerald-600"}>
+              {fmtCurrency(job.variance)} ({fmtPct(job.variancePct)})
+            </span>
+          </SummaryStat>
+        )}
+        {job.actualGpPct != null && (
+          <SummaryStat label="GP margin">{job.actualGpPct.toFixed(1)}%</SummaryStat>
+        )}
+        {job.targetCompletionDate && (
+          <SummaryStat label="Target date">{fmtDate(job.targetCompletionDate)}</SummaryStat>
+        )}
+        <SummaryStat label="Open actions">{job.openActionCount}</SummaryStat>
+        {job.rmsUrl && (
+          <a
+            href={job.rmsUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="ml-auto inline-flex items-center gap-1 text-xs font-medium text-[#F26522] hover:underline"
+          >
+            Open in RMS <ExternalLink className="h-3.5 w-3.5" />
+          </a>
+        )}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        {/* Commitments */}
+        <div className="space-y-3">
         <h3 className="text-xs font-semibold text-gray-700 flex items-center gap-1.5">
           <Lock className="h-3 w-3 text-[#F26522]" /> Accountability commitments
         </h3>
@@ -583,8 +629,18 @@ function JobDetail({ job, onChanged }: { job: Job; onChanged: () => void }) {
       {/* Billing forecast */}
       <BillingEditor job={job} onChanged={onChanged} />
 
-      {/* Action items */}
-      <ActionItemsEditor job={job} onChanged={onChanged} />
+        {/* Action items */}
+        <ActionItemsEditor job={job} onChanged={onChanged} />
+      </div>
+    </div>
+  );
+}
+
+function SummaryStat({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="min-w-0">
+      <div className="text-[10px] font-medium uppercase tracking-wide text-gray-400">{label}</div>
+      <div className="text-sm font-semibold text-gray-800 tabular-nums">{children}</div>
     </div>
   );
 }
@@ -680,19 +736,42 @@ function BillingEditor({ job, onChanged }: { job: Job; onChanged: () => void }) 
 
 // ─── Action items editor ─────────────────────────────────────────────────────
 
+// Common restoration-job tasks, offered as one-click "quick add" chips.
+const ACTION_TEMPLATES = [
+  "Follow up with adjuster",
+  "Confirm scope of work",
+  "Update estimate in RMS",
+  "Schedule crew",
+  "Order materials",
+  "Send invoice",
+  "Collect payment",
+  "Get signed authorization",
+];
+
 function ActionItemsEditor({ job, onChanged }: { job: Job; onChanged: () => void }) {
   const [text, setText] = useState("");
+  const [busy, setBusy] = useState(false);
 
-  const add = async () => {
-    if (!text.trim()) return;
+  const addText = async (value: string) => {
+    const t = value.trim();
+    if (!t) return;
+    setBusy(true);
     await fetch(`/api/jobs/${job.id}/action-items`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text: text.trim() }),
+      body: JSON.stringify({ text: t }),
     });
-    setText("");
+    setBusy(false);
     onChanged();
   };
+
+  const add = async () => {
+    await addText(text);
+    setText("");
+  };
+
+  const existing = new Set(job.actionItems.map((a) => a.text.trim().toLowerCase()));
+  const suggestions = ACTION_TEMPLATES.filter((t) => !existing.has(t.toLowerCase()));
 
   const toggle = async (item: ActionItem) => {
     await fetch(`/api/jobs/action-items/${item.id}`, {
@@ -739,6 +818,20 @@ function ActionItemsEditor({ job, onChanged }: { job: Job; onChanged: () => void
           </div>
         ))}
       </div>
+      {suggestions.length > 0 && (
+        <div className="flex flex-wrap gap-1">
+          {suggestions.slice(0, 6).map((s) => (
+            <button
+              key={s}
+              onClick={() => addText(s)}
+              disabled={busy}
+              className="text-[10px] text-gray-600 bg-gray-100 hover:bg-[#F26522]/10 hover:text-[#F26522] rounded-full px-2 py-0.5 transition-colors disabled:opacity-50"
+            >
+              + {s}
+            </button>
+          ))}
+        </div>
+      )}
       <div className="flex gap-1.5">
         <input
           value={text}
@@ -747,7 +840,7 @@ function ActionItemsEditor({ job, onChanged }: { job: Job; onChanged: () => void
           placeholder="Add an action item…"
           className="flex-1 rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-[#F26522]"
         />
-        <button onClick={add} className="text-[#F26522] hover:bg-[#F26522]/10 rounded-lg px-2">
+        <button onClick={add} disabled={busy} className="text-[#F26522] hover:bg-[#F26522]/10 rounded-lg px-2 disabled:opacity-50">
           <Plus className="h-4 w-4" />
         </button>
       </div>
