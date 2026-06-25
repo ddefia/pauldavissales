@@ -16,6 +16,7 @@ import {
   Save,
   RotateCcw,
   Upload,
+  Sparkles,
 } from "lucide-react";
 import {
   fmtCurrency,
@@ -58,6 +59,7 @@ interface Job {
   targetCompletionDate: string | null;
   struckOut: boolean;
   closedFromExport: boolean;
+  aiSummary: string | null;
   variance: number | null;
   variancePct: number | null;
   latestActionItem: ActionItem | null;
@@ -495,6 +497,24 @@ function JobDetail({ job, onChanged }: { job: Job; onChanged: () => void }) {
   const [targetDate, setTargetDate] = useState(toDateInput(job.targetCompletionDate));
   const [committed, setCommitted] = useState(job.committedEstimate?.toString() ?? "");
   const [saving, setSaving] = useState(false);
+  const [summary, setSummary] = useState(job.aiSummary);
+  const [genning, setGenning] = useState(false);
+  const [summaryError, setSummaryError] = useState("");
+
+  const genSummary = async () => {
+    setGenning(true);
+    setSummaryError("");
+    try {
+      const res = await fetch(`/api/jobs/${job.id}/summary`, { method: "POST" });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "Summary failed");
+      setSummary(json.data.summary);
+    } catch (err) {
+      setSummaryError(err instanceof Error ? err.message : "Summary failed");
+    } finally {
+      setGenning(false);
+    }
+  };
 
   const inputCls =
     "w-full rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-[#F26522] [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none";
@@ -560,6 +580,25 @@ function JobDetail({ job, onChanged }: { job: Job; onChanged: () => void }) {
             Open in RMS <ExternalLink className="h-3.5 w-3.5" />
           </a>
         )}
+        <div className="w-full border-t border-gray-100 pt-2.5 mt-1 flex items-start gap-2">
+          <Sparkles className="h-3.5 w-3.5 text-[#F26522] mt-0.5 shrink-0" />
+          {summary ? (
+            <p className="flex-1 text-xs text-gray-600 leading-relaxed">{summary}</p>
+          ) : summaryError ? (
+            <p className="flex-1 text-xs text-red-500">{summaryError}</p>
+          ) : (
+            <p className="flex-1 text-xs text-gray-300">
+              No summary yet — generate a one-glance recap of this job.
+            </p>
+          )}
+          <button
+            onClick={genSummary}
+            disabled={genning}
+            className="shrink-0 text-[10px] font-semibold text-[#F26522] hover:underline disabled:opacity-50"
+          >
+            {genning ? "Generating…" : summary ? "Regenerate" : "Generate"}
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">

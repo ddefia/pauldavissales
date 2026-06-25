@@ -627,6 +627,11 @@ model Job {
   struckOut            Boolean   @default(false) // manual strike-out (closed by reviewer)
   struckOutAt          DateTime?
 
+  // AI-generated plain-English summary of the job (on demand, cached, preserved
+  // across uploads). Derived from the job's own data.
+  aiSummary            String?   @db.Text
+  aiSummaryAt          DateTime?
+
   // ── System lifecycle (set by the upsert, not the reviewer) ──
   closedFromExport   Boolean   @default(false) // present last upload, absent now
   closedFromExportAt DateTime?
