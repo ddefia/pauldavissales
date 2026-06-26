@@ -141,6 +141,26 @@ function UploadCard() {
               </p>
             )}
           </div>
+
+          {(() => {
+            const dc = summary.detectedColumns;
+            const missing: string[] = [];
+            if (!dc.pm) missing.push("PM");
+            if (!dc.office) missing.push("Office");
+            if (!dc.rmsUrl && !dc.externalId) missing.push("Job URL or Job ID");
+            if (missing.length === 0) return null;
+            const filters = !dc.pm || !dc.office;
+            const links = !dc.rmsUrl && !dc.externalId;
+            return (
+              <div className="rounded-lg bg-amber-50 border border-amber-100 p-3 text-[11px] text-amber-700">
+                <span className="font-semibold">Optional:</span> add {missing.join(", ")} to your RMS
+                export to turn on
+                {filters ? " PM/Office filters" : ""}
+                {filters && links ? " and" : ""}
+                {links ? " one-click RMS links" : ""}. Extra columns are harmless.
+              </div>
+            );
+          })()}
         </div>
       )}
     </div>

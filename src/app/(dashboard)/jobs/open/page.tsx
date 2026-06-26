@@ -17,6 +17,7 @@ import {
   RotateCcw,
   Upload,
   Sparkles,
+  History,
 } from "lucide-react";
 import {
   fmtCurrency,
@@ -40,6 +41,13 @@ interface BillingForecast {
   id: string;
   month: string;
   amount: number;
+}
+interface Revision {
+  id: string;
+  field: string;
+  oldValue: string | null;
+  newValue: string | null;
+  changedAt: string;
 }
 interface Job {
   id: string;
@@ -500,6 +508,23 @@ function JobDetail({ job, onChanged }: { job: Job; onChanged: () => void }) {
   const [summary, setSummary] = useState(job.aiSummary);
   const [genning, setGenning] = useState(false);
   const [summaryError, setSummaryError] = useState("");
+  const [revisions, setRevisions] = useState<Revision[]>([]);
+
+  // The detail endpoint returns the logged revision history for this job.
+  const loadRevisions = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/jobs/${job.id}`);
+      if (!res.ok) return;
+      const json = await res.json();
+      setRevisions(json.data?.revisions ?? []);
+    } catch {
+      /* ignore */
+    }
+  }, [job.id]);
+
+  useEffect(() => {
+    loadRevisions();
+  }, [loadRevisions]);
 
   const genSummary = async () => {
     setGenning(true);
@@ -533,6 +558,7 @@ function JobDetail({ job, onChanged }: { job: Job; onChanged: () => void }) {
     });
     setSaving(false);
     onChanged();
+    loadRevisions();
   };
 
   return (
@@ -671,8 +697,53 @@ function JobDetail({ job, onChanged }: { job: Job; onChanged: () => void }) {
         {/* Action items */}
         <ActionItemsEditor job={job} onChanged={onChanged} />
       </div>
+
+      {/* Commitment revision history — logged edits, never silent overwrites */}
+      {revisions.length > 0 && (
+        <div className="rounded-xl bg-white border border-gray-100 px-4 py-3">
+          <h3 className="text-xs font-semibold text-gray-700 mb-2 flex items-center gap-1.5">
+            <History className="h-3.5 w-3.5 text-gray-400" /> Commitment history
+          </h3>
+          <div className="space-y-1.5">
+            {revisions.map((r) => (
+              <div key={r.id} className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px]">
+                <span className="text-gray-400 w-32 shrink-0">{fmtDate(r.changedAt)}</span>
+                <span className="font-medium text-gray-600 w-40 shrink-0">
+                  {revisionFieldLabel(r.field)}
+                </span>
+                <span className="text-gray-400 line-through">
+                  {revisionValue(r.field, r.oldValue)}
+                </span>
+                <span className="text-gray-300">→</span>
+                <span className="text-gray-800 font-medium">
+                  {revisionValue(r.field, r.newValue)}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
+}
+
+function revisionFieldLabel(field: string): string {
+  const labels: Record<string, string> = {
+    targetMargin: "Target margin",
+    targetCompletionDate: "Target completion date",
+    committedEstimate: "Committed estimate",
+  };
+  return labels[field] ?? field;
+}
+
+function revisionValue(field: string, v: string | null): string {
+  if (v == null || v === "") return "—";
+  if (field === "committedEstimate") {
+    const n = Number(v);
+    return Number.isFinite(n) ? fmtCurrency(n) : v;
+  }
+  if (field === "targetCompletionDate") return fmtDate(v);
+  return v;
 }
 
 function SummaryStat({ label, children }: { label: string; children: React.ReactNode }) {
