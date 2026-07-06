@@ -515,7 +515,7 @@ export default function EnrichmentPage() {
                       <div>
                         <Link
                           href={`/contacts/${contact.id}`}
-                          className="font-medium text-[#1a1a1a] hover:text-[#C4A265]"
+                          className="font-medium text-[#1a1a1a] hover:text-[#F26522]"
                           onClick={(e) => e.stopPropagation()}
                         >
                           {contact.fullName}

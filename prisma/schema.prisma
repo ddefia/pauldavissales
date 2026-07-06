@@ -593,3 +593,132 @@ model AuditLog {
   @@index([entityType, entityId])
   @@index([createdAt])
 }
+
+// ============================================================
+// JOBS DASHBOARD (internal accountability tool)
+//
+// Two coexisting data layers (see whitepaper §4):
+//   Layer A — uploaded from the RMS Excel export, overwritten each upload.
+//   Layer B — manual accountability data, NEVER touched by an upload.
+// Every upload is an UPSERT keyed on jobNumber, never a wipe-and-replace.
+// ============================================================
+
+model Job {
+  id        String @id @default(cuid())
+  jobNumber String @unique // primary business key — used to match rows on upload
+
+  // ── Layer A: uploaded from RMS export (overwritten each upload) ──
+  customerName    String?
+  office          String?
+  pm              String?
+  jobStatus       String?
+  currentEstimate Float?
+  actualGp        Float? // actual estimate gross profit ($) from the export, if present
+  rmsUrl          String? // deep-link, if the export provides a URL column
+  externalId      String? // RMS internal id, if the export provides one
+  rawData         Json? // full uploaded row, for extra/unmapped columns
+
+  // ── Layer B: manual accountability data (never touched by upload) ──
+  committedEstimate    Float? // auto-snapshot of the first estimate seen, then locked
+  committedEstimateAt  DateTime?
+  targetMargin         Float?
+  targetMarginUnit     String?   @default("percent") // "percent" | "currency"
+  targetCompletionDate DateTime?
+  struckOut            Boolean   @default(false) // manual strike-out (closed by reviewer)
+  struckOutAt          DateTime?
+
+  // AI-generated plain-English summary of the job (on demand, cached, preserved
+  // across uploads). Derived from the job's own data.
+  aiSummary            String?   @db.Text
+  aiSummaryAt          DateTime?
+
+  // ── System lifecycle (set by the upsert, not the reviewer) ──
+  closedFromExport   Boolean   @default(false) // present last upload, absent now
+  closedFromExportAt DateTime?
+  firstSeenAt        DateTime  @default(now())
+  lastSeenAt         DateTime  @default(now())
+  lastImportId       String?
+
+  actionItems      JobActionItem[]
+  billingForecasts JobBillingForecast[]
+  revisions        JobFieldRevision[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([pm])
+  @@index([office])
+  @@index([jobStatus])
+  @@index([struckOut])
+  @@index([closedFromExport])
+}
+
+model JobActionItem {
+  id          String    @id @default(cuid())
+  jobId       String
+  job         Job       @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  text        String    @db.Text
+  status      String    @default("open") // "open" | "done"
+  createdById String?
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([jobId])
+  @@index([status])
+}
+
+model JobBillingForecast {
+  id        String   @id @default(cuid())
+  jobId     String
+  job       Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  month     String // actual calendar month, "YYYY-MM" (never relative labels)
+  amount    Float
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([jobId, month])
+  @@index([jobId])
+  @@index([month])
+}
+
+model JobFieldRevision {
+  id          String   @id @default(cuid())
+  jobId       String
+  job         Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  field       String
+  oldValue    String?
+  newValue    String?
+  changedById String?
+  changedAt   DateTime @default(now())
+
+  @@index([jobId])
+  @@index([field])
+}
+
+model JobImportLog {
+  id              String   @id @default(cuid())
+  fileName        String
+  fileSize        Int
+  totalRows       Int      @default(0)
+  matchedJobs     Int      @default(0) // existing jobs updated (Layer A only)
+  newJobs         Int      @default(0) // job numbers seen for the first time
+  closedJobs      Int      @default(0) // disappeared from export, flagged closed
+  skippedRows     Int      @default(0) // rows with no job number
+  detectedColumns Json?
+  jobNumberColumn String?
+  errorMessage    String?
+  uploadedById    String?
+  createdAt       DateTime @default(now())
+
+  @@index([createdAt])
+}
+
+model JobStatusOption {
+  id        String   @id @default(cuid())
+  value     String   @unique
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@index([sortOrder])
+}

@@ -13,8 +13,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Paul Davis Sales - Second Brain",
-  description: "Internal sales platform for Paul Davis Restoration",
+  title: "Jobs Dashboard · Paul Davis Restoration",
+  description:
+    "Internal job accountability tool — open-job review, commitments on the record",
 };
 
 export default function RootLayout({

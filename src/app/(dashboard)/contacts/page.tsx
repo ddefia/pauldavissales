@@ -211,7 +211,7 @@ export default function ContactsPage() {
                         {startRow + idx}
                       </TableCell>
                       <TableCell>
-                        <Link href={`/contacts/${c.id}`} className="font-medium text-[#1a1a1a] hover:text-[#C4A265]">
+                        <Link href={`/contacts/${c.id}`} className="font-medium text-[#1a1a1a] hover:text-[#F26522]">
                           {c.fullName || `${c.firstName} ${c.lastName}`.trim() || "—"}
                         </Link>
                       </TableCell>

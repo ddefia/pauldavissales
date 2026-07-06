@@ -289,7 +289,7 @@ export default function ContactDetailPage() {
                 setShowPdfPicker(!showPdfPicker);
               }
             }}
-            className="border-[#C4A265] text-[#C4A265] hover:bg-[#C4A265]/10"
+            className="border-[#F26522] text-[#F26522] hover:bg-[#F26522]/10"
           >
             {generatingPdf ? (
               <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -608,7 +608,7 @@ export default function ContactDetailPage() {
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm flex items-center gap-2">
-                  <FileText className="h-4 w-4 text-[#C4A265]" /> Talk Track
+                  <FileText className="h-4 w-4 text-[#F26522]" /> Talk Track
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -737,10 +737,10 @@ export default function ContactDetailPage() {
 
           {/* Generated PDFs */}
           {generatedPdfs.length > 0 && (
-            <Card className="border-[#C4A265]/30">
+            <Card className="border-[#F26522]/30">
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm flex items-center gap-2">
-                  <Printer className="h-4 w-4 text-[#C4A265]" /> Generated PDFs ({generatedPdfs.length})
+                  <Printer className="h-4 w-4 text-[#F26522]" /> Generated PDFs ({generatedPdfs.length})
                 </CardTitle>
               </CardHeader>
               <CardContent>

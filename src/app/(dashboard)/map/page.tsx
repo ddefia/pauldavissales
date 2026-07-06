@@ -258,7 +258,7 @@ export default function MapPage() {
       {/* Top bar */}
       <div className="flex items-center justify-between px-4 py-2 bg-white border-b z-10">
         <div className="flex items-center gap-3">
-          <MapPin className="h-5 w-5 text-[#C4A265]" />
+          <MapPin className="h-5 w-5 text-[#F26522]" />
           <h1 className="text-lg font-bold">Territory Map</h1>
           {!loading && (
             <span className="text-xs text-gray-400">
@@ -380,7 +380,7 @@ export default function MapPage() {
                               className="flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 transition group"
                             >
                               <div className="min-w-0">
-                                <p className="text-sm font-medium truncate group-hover:text-[#C4A265]">
+                                <p className="text-sm font-medium truncate group-hover:text-[#F26522]">
                                   {c.fullName}
                                 </p>
                                 <p className="text-[10px] text-gray-400 truncate">
