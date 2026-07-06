@@ -95,12 +95,43 @@ export async function removeJobsOutsideBuiltIn(): Promise<number> {
 // Guards against duplicate concurrent seeds within a single instance.
 let _seeding: Promise<unknown> | null = null;
 
-/** Auto-load the built-in jobs the first time the tool is opened on an empty DB. */
+// Marker recorded in JobImportLog after the one-time "built-in is the default"
+// reset, so it never runs again (later uploads must not be removed).
+const DEFAULT_MARKER = "__builtin_default_v1__";
+
+/**
+ * Make the built-in dataset the default data.
+ * - First run ever (no marker): remove any jobs outside the built-in dataset
+ *   (pre-launch test uploads), load the built-in jobs, and record the marker.
+ * - Every run after that: only seed if the database is completely empty
+ *   (fresh install); uploaded data is never touched again.
+ */
 export async function ensureJobsSeeded(): Promise<void> {
-  const count = await prisma.job.count();
-  if (count > 0) return;
   if (!_seeding) {
-    _seeding = seedBuiltInJobs().finally(() => {
+    _seeding = (async () => {
+      const marker = await prisma.jobImportLog.findFirst({
+        where: { fileName: DEFAULT_MARKER },
+        select: { id: true },
+      });
+
+      if (marker) {
+        const count = await prisma.job.count();
+        if (count === 0) await seedBuiltInJobs();
+        return;
+      }
+
+      const removed = await removeJobsOutsideBuiltIn();
+      const seeded = await seedBuiltInJobs();
+      await prisma.jobImportLog.create({
+        data: {
+          fileName: DEFAULT_MARKER,
+          fileSize: 0,
+          totalRows: seeded.total,
+          newJobs: seeded.inserted,
+          closedJobs: removed,
+        },
+      });
+    })().finally(() => {
       _seeding = null;
     });
   }
