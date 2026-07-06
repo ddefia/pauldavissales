@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth-bypass";
 import prisma from "@/lib/prisma";
 import { serializeJob, JOB_RELATION_INCLUDE } from "@/modules/jobs/services/job-serialize";
+import { ensureJobsSeeded } from "@/modules/jobs/services/job-seed";
 
 // GET /api/jobs — list jobs for the Open Jobs page.
 // Filters stack: ?pm=&office=&status=&view=open|closed|all&search=
@@ -10,6 +11,8 @@ export async function GET(request: NextRequest) {
   if (!session?.user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+
+  await ensureJobsSeeded();
 
   const sp = request.nextUrl.searchParams;
   const pm = sp.get("pm");

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth-bypass";
 import prisma from "@/lib/prisma";
 import { isClosedStatus } from "@/modules/jobs/services/job-serialize";
+import { ensureJobsSeeded } from "@/modules/jobs/services/job-seed";
 
 const DRIFT_THRESHOLD = 0.05; // estimate drifted down >5% from commitment
 
@@ -18,6 +19,8 @@ export async function GET() {
   if (!session?.user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+
+  await ensureJobsSeeded();
 
   const candidates = await prisma.job.findMany({
     where: { struckOut: false, closedFromExport: false },

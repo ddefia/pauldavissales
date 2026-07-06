@@ -11,6 +11,7 @@ import {
   Plus,
   Trash2,
   ShieldCheck,
+  Database,
 } from "lucide-react";
 
 interface ImportSummary {
@@ -28,9 +29,86 @@ interface ImportSummary {
 
 export default function JobsSettingsPage() {
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-      <UploadCard />
-      <StatusListCard />
+    <div className="space-y-5">
+      <BuiltInDataCard />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        <UploadCard />
+        <StatusListCard />
+      </div>
+    </div>
+  );
+}
+
+// ─── Built-in (hardcoded) job data ───────────────────────────────────────────
+
+function BuiltInDataCard() {
+  const [count, setCount] = useState<number | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<{ inserted: number; alreadyPresent: number; total: number } | null>(null);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    fetch("/api/jobs/seed")
+      .then((r) => r.json())
+      .then((d) => setCount(d.data?.builtInCount ?? null))
+      .catch(() => {});
+  }, []);
+
+  const load = async () => {
+    setLoading(true);
+    setError("");
+    setResult(null);
+    try {
+      const res = await fetch("/api/jobs/seed", { method: "POST" });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "Load failed");
+      setResult(json.data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Load failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h2 className="text-sm font-semibold text-gray-800 mb-1 flex items-center gap-1.5">
+            <Database className="h-4 w-4 text-[#F26522]" /> Built-in job data
+          </h2>
+          <p className="text-xs text-gray-400 max-w-xl">
+            {count != null ? <strong>{count.toLocaleString()} jobs</strong> : "A dataset"} are baked
+            into the app and load automatically on a fresh install. Use this to pull them into the
+            current workspace. It only adds jobs that aren&apos;t already here — nothing is
+            overwritten or deleted.
+          </p>
+        </div>
+        <button
+          onClick={load}
+          disabled={loading}
+          className="shrink-0 inline-flex items-center gap-1.5 text-xs font-semibold text-white bg-[#F26522] hover:bg-[#d9551a] rounded-lg px-4 py-2 transition-colors disabled:opacity-50"
+        >
+          {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Database className="h-3.5 w-3.5" />}
+          {loading ? "Loading…" : "Load built-in jobs"}
+        </button>
+      </div>
+
+      {error && (
+        <div className="mt-3 flex items-center gap-2 rounded-lg bg-red-50 p-3 text-xs text-red-600">
+          <AlertCircle className="h-4 w-4 shrink-0" /> {error}
+        </div>
+      )}
+      {result && (
+        <div className="mt-3 flex items-center gap-2 rounded-lg bg-emerald-50 p-3 text-xs text-emerald-700">
+          <CheckCircle2 className="h-4 w-4 shrink-0" />
+          <span>
+            <strong>{result.inserted.toLocaleString()}</strong> loaded ·{" "}
+            <strong>{result.alreadyPresent.toLocaleString()}</strong> already present. Refresh the
+            Dashboard to see them.
+          </span>
+        </div>
+      )}
     </div>
   );
 }
