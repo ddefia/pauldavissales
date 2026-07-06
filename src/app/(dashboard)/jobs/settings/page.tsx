@@ -46,6 +46,9 @@ function BuiltInDataCard() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<{ inserted: number; alreadyPresent: number; total: number } | null>(null);
   const [error, setError] = useState("");
+  const [confirmReset, setConfirmReset] = useState(false);
+  const [resetting, setResetting] = useState(false);
+  const [resetResult, setResetResult] = useState<{ removed: number; inserted: number } | null>(null);
 
   useEffect(() => {
     fetch("/api/jobs/seed")
@@ -58,6 +61,7 @@ function BuiltInDataCard() {
     setLoading(true);
     setError("");
     setResult(null);
+    setResetResult(null);
     try {
       const res = await fetch("/api/jobs/seed", { method: "POST" });
       const json = await res.json();
@@ -67,6 +71,24 @@ function BuiltInDataCard() {
       setError(err instanceof Error ? err.message : "Load failed");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const reset = async () => {
+    setResetting(true);
+    setError("");
+    setResult(null);
+    setResetResult(null);
+    try {
+      const res = await fetch("/api/jobs/seed", { method: "DELETE" });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "Reset failed");
+      setResetResult(json.data);
+      setConfirmReset(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Reset failed");
+    } finally {
+      setResetting(false);
     }
   };
 
@@ -84,15 +106,51 @@ function BuiltInDataCard() {
             overwritten or deleted.
           </p>
         </div>
-        <button
-          onClick={load}
-          disabled={loading}
-          className="shrink-0 inline-flex items-center gap-1.5 text-xs font-semibold text-white bg-[#F26522] hover:bg-[#d9551a] rounded-lg px-4 py-2 transition-colors disabled:opacity-50"
-        >
-          {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Database className="h-3.5 w-3.5" />}
-          {loading ? "Loading…" : "Load built-in jobs"}
-        </button>
+        <div className="shrink-0 flex flex-col items-end gap-1.5">
+          <button
+            onClick={load}
+            disabled={loading || resetting}
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-white bg-[#F26522] hover:bg-[#d9551a] rounded-lg px-4 py-2 transition-colors disabled:opacity-50"
+          >
+            {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Database className="h-3.5 w-3.5" />}
+            {loading ? "Loading…" : "Load built-in jobs"}
+          </button>
+          <button
+            onClick={() => setConfirmReset(true)}
+            disabled={loading || resetting}
+            className="text-[10px] text-gray-400 hover:text-red-500 transition-colors disabled:opacity-50"
+          >
+            Use built-in data only…
+          </button>
+        </div>
       </div>
+
+      {confirmReset && (
+        <div className="mt-3 rounded-lg bg-red-50 border border-red-100 p-3 text-xs text-red-700">
+          <p className="mb-2">
+            This removes every job that is <strong>not</strong> in the built-in dataset — including
+            its action items, forecasts, and history. Built-in jobs (and anything entered on them)
+            are kept. This cannot be undone.
+          </p>
+          <div className="flex gap-2">
+            <button
+              onClick={reset}
+              disabled={resetting}
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-white bg-red-600 hover:bg-red-700 rounded-lg px-3 py-1.5 disabled:opacity-50"
+            >
+              {resetting && <Loader2 className="h-3 w-3 animate-spin" />}
+              {resetting ? "Removing…" : "Yes, keep built-in data only"}
+            </button>
+            <button
+              onClick={() => setConfirmReset(false)}
+              disabled={resetting}
+              className="text-xs font-medium text-gray-500 hover:text-gray-700 px-2"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
 
       {error && (
         <div className="mt-3 flex items-center gap-2 rounded-lg bg-red-50 p-3 text-xs text-red-600">
@@ -106,6 +164,19 @@ function BuiltInDataCard() {
             <strong>{result.inserted.toLocaleString()}</strong> loaded ·{" "}
             <strong>{result.alreadyPresent.toLocaleString()}</strong> already present. Refresh the
             Dashboard to see them.
+          </span>
+        </div>
+      )}
+      {resetResult && (
+        <div className="mt-3 flex items-center gap-2 rounded-lg bg-emerald-50 p-3 text-xs text-emerald-700">
+          <CheckCircle2 className="h-4 w-4 shrink-0" />
+          <span>
+            Done — <strong>{resetResult.removed.toLocaleString()}</strong> non-built-in job
+            {resetResult.removed === 1 ? "" : "s"} removed
+            {resetResult.inserted > 0
+              ? ` and ${resetResult.inserted.toLocaleString()} built-in jobs restored`
+              : ""}
+            . The built-in dataset is now the only data.
           </span>
         </div>
       )}

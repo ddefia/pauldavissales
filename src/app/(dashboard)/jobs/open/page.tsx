@@ -97,6 +97,10 @@ export default function OpenJobsPage() {
   const [expanded, setExpanded] = useState<string | null>(null);
   const [addingFor, setAddingFor] = useState<string | null>(null);
 
+  // Large views (Closed/All can be ~1,900 rows) render incrementally.
+  const PAGE = 100;
+  const [visibleCount, setVisibleCount] = useState(PAGE);
+
   // Distinguish "nothing uploaded yet" from "filters hid everything".
   const filtersActive = !!(pm || office || status || search) || view !== "open";
 
@@ -110,7 +114,10 @@ export default function OpenJobsPage() {
     setLoading(true);
     fetch(`/api/jobs?${params.toString()}`)
       .then((r) => r.json())
-      .then((d) => setJobs(d.data ?? []))
+      .then((d) => {
+        setJobs(d.data ?? []);
+        setVisibleCount(PAGE);
+      })
       .catch(() => {})
       .finally(() => setLoading(false));
   }, [pm, office, status, view, search]);
@@ -169,8 +176,8 @@ export default function OpenJobsPage() {
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-        <div className="grid grid-cols-[1.6fr_1fr_1.3fr_0.9fr_1fr_1.4fr_auto] gap-3 px-5 py-2.5 border-b border-gray-100 text-[10px] font-semibold uppercase tracking-wide text-gray-400">
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-clip">
+        <div className="sticky top-0 z-10 bg-white grid grid-cols-[1.6fr_1fr_1.3fr_0.9fr_1fr_1.4fr_auto] gap-3 px-5 py-2.5 border-b border-gray-100 text-[10px] font-semibold uppercase tracking-wide text-gray-400">
           <div>Customer</div>
           <div>Status</div>
           <div>Estimate (committed → current)</div>
@@ -206,23 +213,35 @@ export default function OpenJobsPage() {
             </div>
           )
         ) : (
-          jobs.map((job) => (
-            <JobRow
-              key={job.id}
-              job={job}
-              expanded={expanded === job.id}
-              onToggle={() => setExpanded(expanded === job.id ? null : job.id)}
-              adding={addingFor === job.id}
-              onAddToggle={() => setAddingFor(addingFor === job.id ? null : job.id)}
-              onChanged={loadJobs}
-            />
-          ))
+          <>
+            {jobs.slice(0, visibleCount).map((job) => (
+              <JobRow
+                key={job.id}
+                job={job}
+                expanded={expanded === job.id}
+                onToggle={() => setExpanded(expanded === job.id ? null : job.id)}
+                adding={addingFor === job.id}
+                onAddToggle={() => setAddingFor(addingFor === job.id ? null : job.id)}
+                onChanged={loadJobs}
+              />
+            ))}
+            {jobs.length > visibleCount && (
+              <button
+                onClick={() => setVisibleCount((c) => c + 300)}
+                className="w-full py-3 text-xs font-semibold text-[#F26522] hover:bg-[#F26522]/5 transition-colors"
+              >
+                Show more ({(jobs.length - visibleCount).toLocaleString()} remaining)
+              </button>
+            )}
+          </>
         )}
       </div>
 
       <p className="text-[11px] text-gray-400 px-1">
-        {jobs.length} job{jobs.length === 1 ? "" : "s"} ·{" "}
-        <Lock className="inline h-3 w-3 -mt-0.5" /> locked fields are manual commitments preserved across uploads.
+        {jobs.length > visibleCount
+          ? `Showing ${visibleCount} of ${jobs.length.toLocaleString()} jobs`
+          : `${jobs.length} job${jobs.length === 1 ? "" : "s"}`}{" "}
+        · <Lock className="inline h-3 w-3 -mt-0.5" /> locked fields are manual commitments preserved across uploads.
       </p>
     </div>
   );

@@ -22,6 +22,7 @@ interface DashboardData {
   gpTotal: number;
   blendedMarginPct: number | null;
   hasGp: boolean;
+  dataAsOf: string | null;
   cashFlow: { month: string; label: string; amount: number }[];
   byStatus: { status: string; count: number }[];
   byPm: { pm: string; count: number; currentTotal: number }[];
@@ -82,6 +83,13 @@ export default function JobsDashboardPage() {
 
   return (
     <div className="space-y-5">
+      {data.dataAsOf && (
+        <p className="text-[11px] text-gray-400 -mb-2">
+          Data as of <span className="font-medium text-gray-500">{fmtDate(data.dataAsOf)}</span> —
+          refresh with a new RMS export in Settings.
+        </p>
+      )}
+
       {/* Stat row */}
       <div className={`grid grid-cols-2 gap-4 ${data.hasGp ? "lg:grid-cols-5" : "lg:grid-cols-4"}`}>
         <StatCard

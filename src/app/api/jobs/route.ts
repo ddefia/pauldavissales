@@ -32,7 +32,12 @@ export async function GET(request: NextRequest) {
 
   const jobs = await prisma.job.findMany({
     where,
-    orderBy: [{ currentEstimate: "desc" }, { customerName: "asc" }],
+    // Biggest jobs first; jobs with no estimate sink to the bottom (Postgres
+    // would otherwise put NULLs first on a DESC sort).
+    orderBy: [
+      { currentEstimate: { sort: "desc", nulls: "last" } },
+      { customerName: "asc" },
+    ],
     include: JOB_RELATION_INCLUDE,
   });
 

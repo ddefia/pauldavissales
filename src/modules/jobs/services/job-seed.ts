@@ -72,6 +72,26 @@ export async function seedBuiltInJobs(): Promise<{
   };
 }
 
+/**
+ * Remove jobs whose job number is NOT in the built-in dataset (e.g. old test
+ * uploads), making the baked-in data the single source. Cascade deletes their
+ * action items / forecasts / revisions. Only runs from the explicit,
+ * user-confirmed Settings action — never from an upload.
+ */
+export async function removeJobsOutsideBuiltIn(): Promise<number> {
+  const keep = new Set(SEED_JOBS.map((j) => j.jobNumber));
+  const existing = await prisma.job.findMany({
+    select: { id: true, jobNumber: true },
+  });
+  const doomed = existing.filter((j) => !keep.has(j.jobNumber)).map((j) => j.id);
+  if (doomed.length === 0) return 0;
+  const CHUNK = 500;
+  for (let i = 0; i < doomed.length; i += CHUNK) {
+    await prisma.job.deleteMany({ where: { id: { in: doomed.slice(i, i + CHUNK) } } });
+  }
+  return doomed.length;
+}
+
 // Guards against duplicate concurrent seeds within a single instance.
 let _seeding: Promise<unknown> | null = null;
 

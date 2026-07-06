@@ -54,8 +54,13 @@ export function serializeJob(job: JobWithRelations) {
   const openActions = job.actionItems.filter((a) => a.status === "open");
   const latestActionItem = openActions[0] ?? job.actionItems[0] ?? null;
 
+  // Drop the raw uploaded row from API payloads — it's kept for auditing but
+  // sending ~2,000 of them to the browser bloats every list response.
+  const { rawData: _rawData, ...rest } = job;
+  void _rawData;
+
   return {
-    ...job,
+    ...rest,
     variance,
     variancePct,
     actualGpPct,

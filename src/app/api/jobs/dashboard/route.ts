@@ -28,6 +28,12 @@ export async function GET() {
   });
   const openJobs = candidates.filter((j) => !isClosedStatus(j.jobStatus));
 
+  // Freshness marker: when the job data was last refreshed (upload or seed).
+  const dataAsOf = candidates.reduce<Date | null>(
+    (max, j) => (max == null || j.lastSeenAt > max ? j.lastSeenAt : max),
+    null
+  );
+
   // ── Cash-flow forecast: sum every open job's billing forecast by month ──
   const monthTotals = new Map<string, number>();
   for (const job of openJobs) {
@@ -125,6 +131,7 @@ export async function GET() {
       gpTotal,
       blendedMarginPct,
       hasGp,
+      dataAsOf,
       cashFlow,
       byStatus,
       byPm,
