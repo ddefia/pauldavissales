@@ -26,7 +26,7 @@ export function middleware(request: NextRequest) {
 
   if (HIDDEN_PREFIXES.some((p) => pathname === p || pathname.startsWith(p + "/"))) {
     const url = request.nextUrl.clone();
-    url.pathname = "/jobs";
+    url.pathname = "/jobs/open";
     url.search = "";
     return NextResponse.redirect(url);
   }

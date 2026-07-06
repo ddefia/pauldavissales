@@ -6,8 +6,8 @@ import { cn } from "@/lib/utils";
 import { LayoutDashboard, ListChecks, CheckSquare, Settings } from "lucide-react";
 
 const nav = [
-  { name: "Dashboard", href: "/jobs", icon: LayoutDashboard },
   { name: "Open Jobs", href: "/jobs/open", icon: ListChecks },
+  { name: "Dashboard", href: "/jobs", icon: LayoutDashboard },
   { name: "Action Tasks", href: "/jobs/actions", icon: CheckSquare },
   { name: "Settings", href: "/jobs/settings", icon: Settings },
 ];
